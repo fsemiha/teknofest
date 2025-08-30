@@ -38,31 +38,9 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="style.css?v=7.0&t=1735400000&cache=bust&mobile=fix">
     
-    <!-- MOBIL CSS - SUPER GÜÇLÜ -->
-    <style>
-        /* HER CIHAZDA ÇALIŞSIN */
-        .phishing-buttons-container {
-            gap: 3px !important;
-            margin-top: 15px !important;
-        }
-        .phishing-button {
-            margin-bottom: 2px !important;
-        }
-        .phishing-button img {
-            min-height: 35px !important;
-        }
-        .phishing-button div {
-            font-size: 0.7rem !important;
-            background: rgba(0,0,0,0.4) !important;
-            padding: 2px 4px !important;
-            border-radius: 3px !important;
-        }
-        #phishing-panel .password-panel-content {
-            padding-top: 35px !important;
-        }
-        
-        /* MOBIL OPTIMIZASYON */
-        @media screen and (max-width: 480px) {
+    <!-- Basit Mobil CSS v7.0 UPDATED -->
+    <style id="mobile-css-v7-updated">
+        @media (max-width: 480px) {
 	/* Timer kutlarını göster */
 	.svg-box { 
 		display: block !important;
@@ -573,49 +551,33 @@
         
         console.log('Mobil kontrol:', window.innerWidth, 'isMobile:', isMobile());
         
-        // Mobilde direkt DOM manipülasyonu
+        // Mobilde direkt style uygula
         if (isMobile()) {
-            console.log('Mobil tespit edildi, DOM manipülasyonu başlıyor...');
+            console.log('Mobil tespit edildi, direkt style uygulanıyor...');
             
-            // Phishing butonlarını direkt setProperty ile değiştir
-            function fixPhishingButtons() {
-                const container = document.querySelector('.phishing-buttons-container');
-                if (container) {
-                    container.style.setProperty('gap', '3px', 'important');
-                    container.style.setProperty('margin-top', '15px', 'important');
-                    console.log('✅ Phishing container düzeltildi');
-                }
-                
-                const buttons = document.querySelectorAll('.phishing-button');
-                buttons.forEach((btn, index) => {
-                    btn.style.setProperty('margin-bottom', '2px', 'important');
-                    const img = btn.querySelector('img');
-                    if (img) {
-                        img.style.setProperty('min-height', '35px', 'important');
-                        img.style.setProperty('height', 'auto', 'important');
+            // Phishing butonlarını yakınlaştır
+            const style = document.createElement('style');
+            style.textContent = `
+                @media (max-width: 480px) {
+                    .phishing-buttons-container {
+                        gap: 2px !important;
+                        margin-top: 8px !important;
                     }
-                    const div = btn.querySelector('div');
-                    if (div) {
-                        div.style.setProperty('font-size', '0.7rem', 'important');
-                        div.style.setProperty('background', 'rgba(0,0,0,0.4)', 'important');
-                        div.style.setProperty('padding', '2px 4px', 'important');
-                        div.style.setProperty('border-radius', '3px', 'important');
-                        div.style.setProperty('line-height', '1.0', 'important');
+                    .phishing-button {
+                        margin: 1px auto !important;
+                        min-height: 30px !important;
                     }
-                    console.log('✅ Phishing buton', index, 'düzeltildi');
-                });
-                
-                const phishingContent = document.querySelector('#phishing-panel .password-panel-content');
-                if (phishingContent) {
-                    phishingContent.style.setProperty('padding-top', '35px', 'important');
-                    console.log('✅ Phishing content padding düzeltildi');
+                    #phishing-panel .password-panel-content {
+                        padding-top: 30px !important;
+                    }
+                    #phishing-panel .password-desc {
+                        margin: 3px 0 !important;
+                        font-size: 9px !important;
+                    }
                 }
-            }
-            
-            // Birden fazla kez dene
-            setTimeout(fixPhishingButtons, 500);
-            setTimeout(fixPhishingButtons, 1000);
-            setTimeout(fixPhishingButtons, 2000);
+            `;
+            document.head.appendChild(style);
+            console.log('Mobil style eklendi!');
         }
         
         // Timer fonksiyonu kaldırıldı - basit CSS ile çözülecek
@@ -2798,7 +2760,7 @@
                 line-height: 1.5;
                 animation: modalFadeIn 0.5s ease-out;
             ">
-                <img src="assets/Asset 21.svg" alt="Modal Çerçeve" style="
+                <img src="assets/Asset 43.svg" alt="Modal Çerçeve" style="
                     position: absolute;
                     top: 0;
                     left: 0;
@@ -2816,21 +2778,21 @@
                 <div style="margin-bottom: 30px;">
                     <img src="assets/Asset 46.svg" alt="Soru İşareti" style="max-width: 60px; height: auto;">
                 </div>
-                <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; color: #fff;">
+                <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; color: #fff;">
                     Bölümü bitirmek istediğinize emin misiniz?
                 </div>
-                <div style="color: #ffffff; line-height: 1.3; margin-bottom: 20px; font-size: 0.9rem;">
+                <div style="color: #ffffff; line-height: 1.4; margin-bottom: 30px; font-size: 1.2rem;">
                     Bu işlemden sonra oltalama testine geçeceksiniz.
                 </div>
-                <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: nowrap;">
+                <div style="margin-top: 35px; display: flex; gap: 30px; justify-content: center; align-items: center; flex-wrap: wrap;">
                     <img src="assets/Asset 60.svg" alt="Geç" onclick="continueToPhishing()" style="
-                        max-width: 90px;
+                        max-width: 180px;
                         cursor: pointer;
                         transition: transform 0.2s ease;
                     " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                     
                     <img src="assets/Asset 61.svg" alt="Geçme" onclick="cancelToPhishing()" style="
-                        max-width: 90px;
+                        max-width: 180px;
                         cursor: pointer;
                         transition: transform 0.2s ease;
                     " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
