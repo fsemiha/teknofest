@@ -475,6 +475,170 @@
                 font-size: 0.8rem;
             }
         }
+
+        /* iPad Mini 6. nesil optimizasyonu - Landscape (1133x744) */
+        @media (min-width: 1100px) and (max-width: 1150px) and (min-height: 720px) and (max-height: 770px) {
+            .password-panel-outer {
+                width: 1000px;
+                max-width: 92vw;
+                height: 620px;
+                max-height: 85vh;
+            }
+            
+            .password-panel-content {
+                padding: 20px 40px 60px 40px;
+                top: 80px;
+                min-height: 450px;
+            }
+            
+            .password-title {
+                font-size: 1.3rem;
+                margin-bottom: 8px;
+            }
+            
+            .password-desc {
+                font-size: 1.1rem;
+                margin-bottom: 16px;
+            }
+            
+            .security-icon {
+                width: 56px !important;
+                height: 56px !important;
+            }
+            
+            .scoreboard-table {
+                max-width: 900px !important;
+            }
+            
+            .scoreboard-header {
+                font-size: 0.95rem !important;
+                padding: 10px 16px !important;
+            }
+            
+            .last-update {
+                top: 140px;
+                left: 120px;
+                font-size: 0.95rem;
+            }
+            
+            .refresh-btn {
+                max-width: 85px;
+                bottom: 12px;
+                right: 160px;
+            }
+            
+            .clear-btn {
+                max-width: 85px;
+                bottom: 12px;
+                right: 280px;
+            }
+            
+            .logo {
+                width: 95px;
+                top: 28px;
+                left: 28px;
+            }
+            
+            .page-btn {
+                padding: 6px 14px;
+                font-size: 0.95rem;
+                min-width: 38px;
+            }
+            
+            .page-info {
+                font-size: 0.95rem;
+            }
+            
+            .pagination-controls {
+                margin-top: 18px;
+                gap: 18px;
+            }
+        }
+
+        /* iPad Mini 6. nesil optimizasyonu - Portrait (744x1133) */
+        @media (min-width: 720px) and (max-width: 770px) and (min-height: 1100px) and (max-height: 1150px) {
+            .password-panel-outer {
+                width: 680px;
+                max-width: 95vw;
+                height: 950px;
+                max-height: 85vh;
+            }
+            
+            .password-panel-content {
+                padding: 20px 30px 80px 30px;
+                top: 80px;
+                min-height: 750px;
+            }
+            
+            .password-title {
+                font-size: 1.2rem;
+                margin-bottom: 6px;
+            }
+            
+            .password-desc {
+                font-size: 1rem;
+                margin-bottom: 18px;
+            }
+            
+            .security-icon {
+                width: 52px !important;
+                height: 52px !important;
+            }
+            
+            .scoreboard-table {
+                max-width: 620px !important;
+            }
+            
+            .scoreboard-header {
+                font-size: 0.85rem !important;
+                padding: 8px 12px !important;
+            }
+            
+            .last-update {
+                top: 135px;
+                left: 100px;
+                font-size: 0.9rem;
+            }
+            
+            .refresh-btn {
+                max-width: 75px;
+                bottom: 10px;
+                right: 130px;
+            }
+            
+            .clear-btn {
+                max-width: 75px;
+                bottom: 10px;
+                right: 230px;
+            }
+            
+            .logo {
+                width: 85px;
+                top: 24px;
+                left: 24px;
+            }
+            
+            .page-btn {
+                padding: 5px 12px;
+                font-size: 0.9rem;
+                min-width: 35px;
+            }
+            
+            .page-info {
+                font-size: 0.9rem;
+            }
+            
+            .pagination-controls {
+                margin-top: 20px;
+                gap: 15px;
+            }
+            
+            /* Skor satırları için özel düzenlemeler */
+            .scoreboard-row {
+                font-size: 0.8rem !important;
+                padding: 8px 10px !important;
+            }
+        }
     </style>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>

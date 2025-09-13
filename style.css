@@ -81,14 +81,6 @@ body, html {
     z-index: 2;
 }
 
-/* Mobil için center-panel ayarı */
-@media (max-width: 767px) {
-    .center-panel {
-        top: 50%;
-        transform: translate(-50%, -50%);
-    }
-}
-
 .main-title-panel {
     position: relative;
     display: flex;
@@ -120,17 +112,9 @@ body, html {
     z-index: 2;
 }
 
-/* Mobil için inside-panel özel konumlandırma - FORCED */
-@media (max-width: 767px) {
-    .inside-panel {
-        top: 55% !important;
-        transform: translate(-50%, -55%) !important;
-    }
-}
-
 .panel-desc {
     color: #ffffff;
-    font-size: 1.4rem;
+    font-size: 1.15rem;
     text-align: center;
     margin-bottom: 18px;
     font-family: 'Gilmer', Arial, sans-serif;
@@ -201,8 +185,8 @@ body, html {
 
 .input-svg-wrapper {
     position: relative;
-    width: 85%;
-    max-width: 400px;
+    width: 80%;
+    max-width: 340px;
     margin: 0 auto 18px auto;
     display: flex;
     justify-content: center;
@@ -223,7 +207,7 @@ body, html {
     border: none;
     outline: none;
     color: #000000;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-family: 'Gilmer', Arial, sans-serif;
     text-align: center;
     padding: 0 18px;
@@ -241,225 +225,33 @@ body, html {
 
 #username-panel .start-svg {
     margin-top: 0;
-    width: 85%;
-    max-width: 400px;
+    width: 80%;
+    max-width: 340px;
 }
 
-/* Tablet optimizasyonu - Honor Pad 9 (12.1 inch, 2560x1600) */
-@media (min-width: 768px) and (max-width: 1024px) {
+@media (max-width: 700px) {
     .main-title-panel {
-        width: 85vw;
-        height: 50vw;
-        min-height: 400px;
-        max-height: 600px;
+        width: 98vw;
+        height: 60vw;
+        min-height: 260px;
     }
     .inside-panel {
-        width: 90%;
-        gap: 20px;
-    }
-    .main-btn-svg, .start-svg {
-        max-width: 500px;
-        min-width: 300px;
-    }
-    .logo {
-        width: 120px;
-        top: 24px;
-        left: 24px;
-    }
-    .scoreboard {
-        right: 24px;
-        bottom: 24px;
-        padding: 12px 16px;
-    }
-    .panel-desc {
-        font-size: 1.6rem;
-        line-height: 1.4;
-    }
-    
-    /* Tablet için touch friendly buton boyutları */
-    .main-btn-svg:hover {
-        transform: scale(1.08);
-    }
-    
-    /* Password panel tablet optimizasyonu */
-    .password-panel-outer {
-        width: 90vw;
-        height: 85vh;
-        max-width: 900px;
-    }
-    
-    .password-check-btn-wrapper {
-        width: 320px;
-        height: 70px;
-    }
-    
-    .password-check-btn-text {
-        font-size: 1.2rem;
-    }
-    
-    /* Kiosk mode için tam ekran optimizasyonu */
-    .background {
-        user-select: none;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-    }
-}
-
-/* Honor Pad 9 Özel Optimizasyon (2560x1600) */
-@media (min-width: 1025px) {
-    .main-title-panel {
-        width: 75vw;
-        height: 45vw;
-        min-height: 500px;
-        max-height: 700px;
-    }
-    
-    .logo {
-        width: 140px;
-        top: 40px;
-        left: 40px;
-    }
-    
-    .scoreboard {
-        right: 40px;
-        bottom: 40px;
-        padding: 15px 20px;
-    }
-    
-    .scoreboard-img {
-        width: 220px;
-        height: auto;
-    }
-    
-    .panel-desc {
-        font-size: 1.8rem;
-        line-height: 1.5;
-    }
-    
-    .main-btn-svg, .start-svg {
-        max-width: 600px;
-        min-width: 400px;
-    }
-    
-    /* Honor Pad 9 için büyük password panel */
-    .password-panel-outer {
-        width: 85vw;
-        height: 85vh;
-        max-width: 1100px;
-        min-height: 750px;
-    }
-    
-    .password-panel-top {
-        top: 120px;
-        padding: 0 80px;
-        min-height: 80px;
-    }
-    
-    .svg-box {
-        width: 20vw;
-        max-width: 200px;
-        min-width: 150px;
-        height: 80px;
-    }
-    
-    .svg-text {
-        font-size: 1.1rem;
-    }
-    
-    .security-icon {
-        width: 65px;
-        height: auto;
-        margin-bottom: 12px;
-    }
-    
-    .password-title {
-        font-size: 1.8rem;
-        margin-bottom: 8px;
-        letter-spacing: 1.5px;
-    }
-    
-    .password-desc {
-        font-size: 1.4rem;
-        margin-bottom: 24px;
-    }
-    
-    .password-input-wrapper {
-        width: 70%;
-        max-width: 500px;
-        margin-bottom: 24px;
-    }
-    
-    .password-check-btn-wrapper {
-        width: 400px;
-        height: 80px;
-    }
-    
-    .password-check-btn-text {
-        font-size: 1.3rem;
-    }
-    
-    .password-panel-content {
-        top: 130px;
-        padding: 30px 20px 100px 20px;
-        max-height: calc(85vh - 230px);
-    }
-}
-
-/* Mobil cihazlar için */
-@media (max-width: 767px) {
-    .main-title-panel {
-        width: 95vw;
-        height: 80vh;
-        min-height: 400px;
-        max-height: 550px;
-    }
-    .inside-panel {
-        width: 88%;
+        width: 95%;
         gap: 10px;
-        padding: 8px;
-        justify-content: flex-start;
-    }
-    
-    .main-buttons {
-        gap: 8px;
-        width: 100%;
     }
     .main-btn-svg, .start-svg {
-        max-width: 85vw;
-        min-width: 200px;
-        height: auto;
+        max-width: 98vw;
     }
-    
-    .input-svg-wrapper {
-        width: 90%;
-        max-width: 300px;
-    }
-    
-    #username-panel .start-svg {
-        width: 90%;
-        max-width: 300px;
-    }
-    
-    /* Mobilde logo daha küçük */
     .logo {
-        width: 45px;
-        top: 10px;
-        left: 10px;
+        width: 70px;
+        top: 12px;
+        left: 12px;
     }
-    
-    /* Mobilde scoreboard daha küçük */
     .scoreboard {
-        right: 12px;
-        bottom: 12px;
-        padding: 6px 8px;
+        right: 15px;
+        bottom: 15px;
+        padding: 8px 10px;
     }
-    
-    .scoreboard-img {
-        width: 120px;
-        height: auto;
-    }
-    
     .background-img {
         width: 100vw;
         height: 100vh;
@@ -470,180 +262,7 @@ body, html {
         min-height: 100vh;
     }
     .panel-desc {
-        font-size: 0.75rem !important;
-        line-height: 1.1 !important;
-        margin-bottom: 4px !important;
-        padding: 0 4px !important;
-        text-align: center !important;
-        word-wrap: break-word !important;
-        max-width: 100% !important;
-        overflow-wrap: break-word !important;
-        position: relative !important;
-        top: -12px !important;
-    }
-    
-    /* Mobilde password panel için Asset 21 kullan */
-    .password-panel-outer {
-        width: 98vw;
-        height: 100vh;
-        max-width: none;
-        margin: 0 auto;
-        min-height: 750px;
-        max-height: none;
-    }
-    
-    /* Mobilde eski img çerçeveyi gizle */
-    .password-panel-bg {
-        display: none;
-    }
-    
-    /* Mobilde Asset 21 ile yeni çerçeve */
-    .password-panel-outer::before {
-        content: '';
-        position: absolute;
-        top: -10px;
-        left: -10px;
-        width: calc(100% + 20px);
-        height: calc(100% + 20px);
-        background-image: url('assets/Asset 21.svg');
-        background-size: 100% 100%;
-        background-repeat: no-repeat;
-        background-position: center;
-        z-index: 0;
-        pointer-events: none;
-    }
-    
-    /* Mobilde share panel için Asset 21 */
-    #share-panel .password-panel-bg {
-        display: none;
-    }
-    
-    #share-panel .password-panel-outer::before {
-        content: '';
-        position: absolute;
-        top: -10px;
-        left: -10px;
-        width: calc(100% + 20px);
-        height: calc(100% + 20px);
-        background-image: url('assets/Asset 21.svg');
-        background-size: 100% 100%;
-        background-repeat: no-repeat;
-        background-position: center;
-        z-index: 0;
-        pointer-events: none;
-    }
-    
-    /* Mobilde phishing panel için Asset 21 */
-    #phishing-panel .password-panel-bg {
-        display: none;
-    }
-    
-    #phishing-panel .password-panel-outer::before {
-        content: '';
-        position: absolute;
-        top: -10px;
-        left: -10px;
-        width: calc(100% + 20px);
-        height: calc(100% + 20px);
-        background-image: url('assets/Asset 21.svg');
-        background-size: 100% 100%;
-        background-repeat: no-repeat;
-        background-position: center;
-        z-index: 0;
-        pointer-events: none;
-    }
-    
-    /* Panel content mobilde daha compakt */
-    .password-panel-content {
-        top: 60px;
-        padding: 15px 12px 120px 12px;
-        max-height: calc(100vh - 180px);
-        overflow-y: auto;
-        position: relative;
-        z-index: 10;
-    }
-    
-    #share-panel .password-panel-content,
-    #phishing-panel .password-panel-content {
-        top: 60px;
-        padding: 15px 12px 120px 12px;
-        max-height: calc(100vh - 180px);
-        overflow-y: auto;
-        position: relative;
-        z-index: 10;
-    }
-    
-    /* Mobilde panel top area daha compakt */
-    .password-panel-top {
-        top: 35px;
-        padding: 0 15px;
-        min-height: 35px;
-        position: relative;
-        z-index: 10;
-    }
-    
-    .svg-box {
-        width: 25vw;
-        max-width: 100px;
-        min-width: 70px;
-        height: 35px;
-    }
-    
-    .svg-text {
-        font-size: 0.65rem;
-    }
-    
-    /* Mobilde security icon daha küçük */
-    .security-icon {
-        width: 28px;
-        height: auto;
-        margin-bottom: 4px;
-    }
-    
-    /* Mobilde title daha küçük */
-    .password-title {
-        font-size: 0.9rem;
-        margin-bottom: 3px;
-        letter-spacing: 0.3px;
-    }
-    
-    /* Mobilde description daha küçük */
-    .password-desc {
-        font-size: 0.7rem;
-        margin-bottom: 8px;
-        line-height: 1.2;
-    }
-    
-    /* Touch friendly butonlar */
-    .main-btn-svg {
-        min-height: 50px;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-    }
-    
-    /* Input alanları touch için optimize */
-    .username-input-on-svg {
-        font-size: 16px; /* iOS zoom önleme */
-        min-height: 44px; /* Touch target minimum */
-        padding: 8px 12px;
-    }
-    
-    /* Password input wrapper mobilde daha küçük */
-    .password-input-wrapper {
-        width: 80%;
-        max-width: 260px;
-        margin-bottom: 10px;
-    }
-    
-    /* Check button mobilde daha küçük */
-    .password-check-btn-wrapper {
-        width: 160px;
-        height: 35px;
-        margin: 0 auto;
-    }
-    
-    .password-check-btn-text {
-        font-size: 0.7rem;
+        font-size: 1rem;
     }
 }
 
@@ -911,183 +530,7 @@ body, html {
     }
 }
 
-/* Honor Pad 9 ve benzer büyük tabletler için optimizasyon */
-@media (min-width: 1025px) and (max-width: 1440px) {
-    .main-title-panel {
-        width: 70vw;
-        height: 40vw;
-        min-height: 500px;
-        max-height: 700px;
-    }
-    
-    .logo {
-        width: 140px;
-        top: 40px;
-        left: 40px;
-    }
-    
-    .panel-desc {
-        font-size: 1.8rem;
-        line-height: 1.5;
-    }
-    
-    .main-btn-svg, .start-svg {
-        max-width: 600px;
-        min-width: 400px;
-    }
-    
-    .password-panel-outer {
-        width: 80vw;
-        height: 80vh;
-        max-width: 1200px;
-    }
-    
-    .password-check-btn-wrapper {
-        width: 380px;
-        height: 80px;
-    }
-    
-    .password-check-btn-text {
-        font-size: 1.3rem;
-    }
-}
-
-/* Samsung Galaxy S8 için özel ayar (360x740) */
-@media (min-width: 350px) and (max-width: 370px) and (min-height: 700px) and (max-height: 780px) {
-    .main-title-panel {
-        width: 95vw;
-        height: 78vh;
-        min-height: 420px;
-        max-height: 540px;
-    }
-    
-    .inside-panel {
-        width: 86%;
-        gap: 7px;
-        padding: 5px;
-        top: 50%;
-        transform: translate(-50%, -50%);
-    }
-    
-    .panel-desc {
-        font-size: 0.72rem;
-        line-height: 1.1;
-        margin-bottom: 4px;
-        padding: 0 4px;
-        position: relative;
-        top: -6px;
-        text-align: center;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-    }
-    
-    .main-buttons {
-        gap: 6px;
-        width: 100%;
-    }
-    
-    .main-btn-svg, .start-svg {
-        max-width: 80vw;
-        min-width: 180px;
-    }
-}
-
-/* iPhone 12 Pro için basit ayar */
-@media (max-width: 400px) and (min-height: 800px) {
-    .panel-desc {
-        font-size: 0.85rem !important;
-        position: relative !important;
-        top: -8px !important;
-        line-height: 1.1 !important;
-        margin-bottom: 6px !important;
-        padding: 0 4px !important;
-        word-wrap: break-word !important;
-        overflow-wrap: break-word !important;
-    }
-    
-    .inside-panel {
-        top: 54% !important;
-        transform: translate(-50%, -54%) !important;
-        gap: 12px !important;
-    }
-    
-    .main-title-panel {
-        height: 75vh !important;
-        min-height: 450px !important;
-    }
-}
-
-/* Küçük tabletler ve büyük telefonlar */
-@media (min-width: 568px) and (max-width: 767px) {
-    .main-title-panel {
-        width: 90vw;
-        height: 55vw;
-        min-height: 320px;
-        max-height: 480px;
-    }
-    
-    .inside-panel {
-        width: 92%;
-        gap: 15px;
-    }
-    
-    .main-btn-svg, .start-svg {
-        max-width: 90vw;
-        min-width: 250px;
-    }
-    
-    .panel-desc {
-        font-size: 1.5rem;
-        line-height: 1.4;
-    }
-    
-    .password-panel-outer {
-        width: 95vw;
-        height: 75vh;
-    }
-}
-
 /* Çok küçük ekranlar için ekstra güvenlik */
-@media (max-width: 500px) {
-    .main-title-panel {
-        width: 98vw;
-        height: 75vh;
-        min-height: 380px;
-        max-height: 500px;
-    }
-    
-    .inside-panel {
-        width: 85%;
-        gap: 8px;
-        padding: 5px;
-        justify-content: flex-start;
-        top: 54%;
-        transform: translate(-50%, -54%);
-    }
-    
-    .main-buttons {
-        gap: 6px;
-    }
-    
-    .main-btn-svg, .start-svg {
-        max-width: 80vw;
-        min-width: 180px;
-    }
-    
-    .panel-desc {
-        font-size: 0.73rem;
-        line-height: 1.05;
-        margin-bottom: 3px;
-        padding: 0 3px;
-        text-align: center;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        max-width: 100%;
-        position: relative;
-        top: -8px;
-    }
-}
-
 @media (max-width: 400px) {
     .password-panel-top {
         top: 80px;
@@ -1113,62 +556,339 @@ body, html {
         min-width: 80px;
         height: 45px;
     }
+}
+
+/* iPad Mini 6. nesil optimizasyonu - Landscape (1133x744) */
+@media (min-width: 1100px) and (max-width: 1150px) and (min-height: 720px) and (max-height: 770px) {
+    body, html {
+        overflow: auto;
+    }
     
-    /* Çok küçük ekranlarda buton boyutlarını artır */
+    .main-title-panel {
+        width: 650px;
+        height: 480px;
+        max-width: 95vw;
+        max-height: 75vh;
+    }
+    
+    .inside-panel {
+        gap: 20px;
+        width: 85%;
+    }
+    
+    .main-buttons {
+        gap: 10px;
+        width: 65%;
+    }
+    
     .main-btn-svg {
-        min-height: 60px;
-        padding: 8px;
+        max-width: 380px;
+        min-width: 200px;
     }
     
-    .username-input-on-svg {
-        font-size: 20px; /* Daha büyük font zoom'u önler */
-        padding: 12px 16px;
-    }
-}
-
-/* Landscape orientation için özel ayarlar */
-@media (orientation: landscape) and (max-height: 600px) {
-    .main-title-panel {
-        height: 80vh;
-        max-height: none;
-    }
-    
-    .password-panel-outer {
-        height: 95vh;
-    }
-    
-    .logo {
-        width: 60px;
-        top: 10px;
-        left: 10px;
-    }
-}
-
-
-
-/* Ultra-wide ekranlar için */
-@media (min-width: 1441px) {
-    .main-title-panel {
-        width: 60vw;
-        height: 35vw;
-        min-height: 600px;
-        max-height: 800px;
-    }
-    
-    .logo {
-        width: 160px;
-        top: 50px;
-        left: 50px;
-    }
-    
-    .main-btn-svg, .start-svg {
-        max-width: 700px;
-        min-width: 500px;
+    .start-svg {
+        max-width: 320px;
+        width: 75%;
     }
     
     .panel-desc {
-        font-size: 1.9rem;
-        line-height: 1.6;
+        font-size: 1.1rem;
+        margin-bottom: 16px;
+    }
+    
+    .logo {
+        width: 90px;
+        top: 24px;
+        left: 24px;
+    }
+    
+    /* Password paneli düzenlemeleri */
+    .password-panel-outer {
+        width: 900px;
+        max-width: 90vw;
+        height: 650px;
+        max-height: 85vh;
+        min-height: 450px;
+    }
+    
+    .password-panel-content {
+        top: 100px;
+        padding: 25px 20px 80px 20px;
+        min-height: 480px;
+        max-height: 520px;
+    }
+    
+    .password-panel-top {
+        top: 90px;
+        padding: 0 80px;
+    }
+    
+    .svg-box {
+        width: 140px;
+        min-width: 100px;
+        height: 60px;
+    }
+    
+    .svg-text {
+        font-size: 1rem;
+    }
+    
+    .password-title {
+        font-size: 1.3rem;
+    }
+    
+    .password-desc {
+        font-size: 1.1rem;
+    }
+    
+    .security-icon {
+        width: 48px;
+        height: auto;
+    }
+    
+    .password-input-wrapper {
+        width: 70%;
+        max-width: 400px;
+    }
+    
+    .password-check-btn-wrapper {
+        width: 240px;
+    }
+    
+    /* Username panel düzenlemeleri */
+    #username-panel .input-svg-wrapper {
+        width: 75%;
+        max-width: 380px;
+    }
+    
+    #username-panel .start-svg {
+        width: 75%;
+        max-width: 320px;
+    }
+    
+    /* Share panel düzenlemeleri */
+    .share-questions-container {
+        max-width: 700px;
+        max-height: 320px;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+    
+    .share-question-item {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+    
+    /* Phishing buttons düzenlemeleri */
+    .phishing-buttons-container {
+        max-width: 500px;
+        gap: 10px;
+    }
+    
+    .phishing-button {
+        min-height: 50px !important;
+    }
+    
+    /* Final score panel düzenlemeleri */
+    .final-score-container {
+        max-width: 420px;
+        width: 85%;
+    }
+    
+    .final-score-content {
+        width: 90%;
+        max-width: 350px;
+    }
+}
+
+/* iPad Mini özel optimizasyon (768x1024) */
+@media (min-width: 768px) and (max-width: 820px) and (min-height: 1000px) and (max-height: 1100px) {
+    .panel-desc {
+        font-size: clamp(1.8rem, 5vw, 2.6rem);
+        margin-bottom: clamp(20px, 4vh, 40px);
+        letter-spacing: clamp(0.9px, 0.3vw, 1.8px);
+        line-height: 1.4;
+        font-weight: 500;
+    }
+    
+    .svg-box {
+        width: clamp(140px, 22vw, 270px);
+        height: clamp(70px, 12vh, 105px);
+    }
+    
+    .svg-text {
+        font-size: clamp(0.8rem, 2.2vw, 1.2rem);
+        font-weight: 400;
+        max-width: 85%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .password-panel-content {
+        top: clamp(80px, 14vh, 110px);
+        padding: clamp(20px, 3vh, 30px) clamp(12px, 2vw, 24px) clamp(50px, 8vh, 80px) clamp(12px, 2vw, 24px);
+        gap: clamp(8px, 1.5vh, 15px);
+    }
+    
+    #share-panel .password-panel-content,
+    #phishing-panel .password-panel-content {
+        top: clamp(80px, 14vh, 110px);
+        padding: clamp(20px, 3vh, 30px) clamp(12px, 2vw, 24px) clamp(50px, 8vh, 80px) clamp(12px, 2vw, 24px);
+        gap: clamp(8px, 1.5vh, 15px);
+    }
+    
+    .password-result {
+        gap: clamp(8px, 1.5vh, 15px);
+        margin-top: clamp(10px, 2vh, 20px);
+    }
+}
+
+/* iPad Mini 6. nesil optimizasyonu - Portrait (744x1133) */
+@media (min-width: 720px) and (max-width: 770px) and (min-height: 1100px) and (max-height: 1150px) {
+    body, html {
+        overflow: auto;
+    }
+    
+    .main-title-panel {
+        width: 520px;
+        height: 420px;
+        max-width: 95vw;
+        max-height: 45vh;
+    }
+    
+    .inside-panel {
+        gap: 18px;
+        width: 90%;
+    }
+    
+    .main-buttons {
+        gap: 12px;
+        width: 70%;
+    }
+    
+    .main-btn-svg {
+        max-width: 320px;
+        min-width: 180px;
+    }
+    
+    .start-svg {
+        max-width: 280px;
+        width: 80%;
+    }
+    
+    .panel-desc {
+        font-size: 1rem;
+        margin-bottom: 14px;
+    }
+    
+    .logo {
+        width: 80px;
+        top: 20px;
+        left: 20px;
+    }
+    
+    /* Password paneli düzenlemeleri */
+    .password-panel-outer {
+        width: 680px;
+        max-width: 95vw;
+        height: 900px;
+        max-height: 85vh;
+        min-height: 600px;
+    }
+    
+    .password-panel-content {
+        top: 100px;
+        padding: 25px 20px 100px 20px;
+        min-height: 700px;
+        max-height: 750px;
+        overflow-y: auto;
+    }
+    
+    .password-panel-top {
+        top: 90px;
+        padding: 0 60px;
+    }
+    
+    .svg-box {
+        width: 120px;
+        min-width: 90px;
+        height: 55px;
+    }
+    
+    .svg-text {
+        font-size: 0.95rem;
+    }
+    
+    .password-title {
+        font-size: 1.2rem;
+    }
+    
+    .password-desc {
+        font-size: 1rem;
+    }
+    
+    .security-icon {
+        width: 44px;
+        height: auto;
+    }
+    
+    .password-input-wrapper {
+        width: 80%;
+        max-width: 380px;
+    }
+    
+    .password-check-btn-wrapper {
+        width: 220px;
+    }
+    
+    /* Username panel düzenlemeleri */
+    #username-panel .input-svg-wrapper {
+        width: 80%;
+        max-width: 360px;
+    }
+    
+    #username-panel .start-svg {
+        width: 80%;
+        max-width: 300px;
+    }
+    
+    /* Share panel düzenlemeleri */
+    .share-questions-container {
+        max-width: 600px;
+        max-height: 450px;
+        gap: 8px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    
+    .share-question-item {
+        font-size: 0.85rem;
+        padding: 8px;
+    }
+    
+    /* Phishing buttons düzenlemeleri */
+    .phishing-buttons-container {
+        max-width: 480px;
+        gap: 8px;
+    }
+    
+    .phishing-button {
+        min-height: 45px !important;
+    }
+    
+    /* Final score panel düzenlemeleri */
+    .final-score-container {
+        max-width: 380px;
+        width: 90%;
+    }
+    
+    .final-score-content {
+        width: 95%;
+        max-width: 320px;
+    }
+    
+    .final-score-row {
+        font-size: 0.9rem;
+        padding: 6px 12px;
     }
 }
 
@@ -1198,7 +918,21 @@ body, html {
 }
 
 #crack-time {
-    
+    margin: 15px 0;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #ff6b35;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(247, 147, 30, 0.2));
+    border: 2px solid #ff6b35;
+    border-radius: 15px;
+    padding: 15px 20px;
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.4);
+    animation: pulseGlow 2s infinite alternate;
+    font-family: 'Conthrax', 'Gilmer', Arial, sans-serif;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(255, 107, 53, 0.6);
+    transition: all 0.5s ease;
 }
 
 /* Şifre gücüne göre farklı renkler */
@@ -1839,7 +1573,4 @@ body, html {
     50% { transform: translateX(0%); }
     100% { transform: translateX(100%); }
 }
-
-/* Cache buster - iPhone 12 Pro fix applied */
-/* Updated: 2024-01-01 */
 
