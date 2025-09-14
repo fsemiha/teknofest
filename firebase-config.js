@@ -1,16 +1,15 @@
 // Firebase Konfigürasyon Dosyası
-// Teknofest projesi için güncellenmiş konfigürasyon
+// Bu dosyayı düzenleyerek Firebase ayarlarınızı yapın
 
 const FIREBASE_CONFIG = {
-    // Firebase Console'dan alınan gerçek bilgiler - teknofest projesi
-    apiKey: "AIzaSyB3ofVngr1rY6Zr2bTSE3PRFT1z104nMXo",
-    authDomain: "teknofest-c7a92.firebaseapp.com",
-    databaseURL: "https://teknofest-c7a92-default-rtdb.firebaseio.com",
-    projectId: "teknofest-c7a92",
-    storageBucket: "teknofest-c7a92.firebasestorage.app",
-    messagingSenderId: "478655816162",
-    appId: "1:478655816162:web:0cb7626d34935611ed59bb",
-    measurementId: "G-PG8ZFFEWJP"
+    // Firebase Console'dan alacağınız bilgiler
+    apiKey: "AIzaSyExample...", // Web API Key
+    authDomain: "siber-macera-default-rtdb.firebaseapp.com",
+    databaseURL: "https://siber-macera-default-rtdb.firebaseio.com", // Realtime Database URL
+    projectId: "siber-macera",
+    storageBucket: "siber-macera.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abc123def456"
 };
 
 // Bu konfigürasyonu otomatik olarak window nesnesine ekle
