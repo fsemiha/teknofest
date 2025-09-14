@@ -167,9 +167,9 @@ body, html {
 
 .logo {
     position: fixed;
-    top: 10px;
-    left: 10px;
-    width: 80px;
+    top: 32px;
+    left: 32px;
+    width: 110px;
     height: auto;
     z-index: 3;
 }
@@ -1532,7 +1532,7 @@ body, html {
     border-radius: 8px;
     padding: 12px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.1s ease;
     text-align: center;
     font-family: 'Gilmer', Arial, sans-serif;
     font-size: 0.95rem;
@@ -1597,7 +1597,7 @@ body, html {
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.1);
     border: 2px solid rgba(255, 255, 255, 0.3);
-    transition: all 0.3s ease;
+    transition: all 0.1s ease;
 }
 
 .submit-answers-btn:hover {
@@ -1608,7 +1608,7 @@ body, html {
 
 .submit-answers-btn img {
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.1s ease;
 }
 
 .submit-answers-btn img:hover {
@@ -1635,7 +1635,7 @@ body, html {
 .continue-btn {
     margin-top: 20px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.1s ease;
 }
 
 #continue-to-phishing-btn {
@@ -1659,7 +1659,7 @@ body, html {
 .phishing-button {
     position: relative !important;
     cursor: pointer !important;
-    transition: all 0.3s ease !important;
+    transition: all 0.1s ease !important;
     min-height: 60px !important;
     display: block !important;
 }
