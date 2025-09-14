@@ -277,14 +277,18 @@
     
     // Firebase konfigürasyonunu kontrol et
     if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyExample...") {
-        // Firebase'i async olarak başlat
+        // Firebase'i başlat (sadece geçerli config varsa)
         setTimeout(() => {
             try {
+                console.log("🚀 Firebase başlatılıyor...");
+                console.log("📝 Config:", firebaseConfig);
+                
                 firebase.initializeApp(firebaseConfig);
                 database = firebase.database();
                 isFirebaseEnabled = true;
                 console.log("✅ Firebase başarıyla bağlandı - Çoklu ekran modu aktif!");
                 console.log("🔗 Veritabanı URL:", firebaseConfig.databaseURL);
+                console.log("📊 Database objesi:", database);
             
             // Mevcut status div'ini kaldır (temizlik)
             const existingStatus = document.getElementById('firebase-status');
@@ -497,12 +501,18 @@
                     }
                 });
             }).catch((error) => {
-                console.error("Firebase'e skor kaydedilemedi:", error);
+                console.error("❌ Firebase'e skor kaydedilemedi - HATA DETAYI:", error);
+                console.error("❌ Error message:", error.message);
+                console.error("❌ Error code:", error.code);
+                console.error("❌ Database state:", database ? "Mevcut" : "Null");
+                console.error("❌ isFirebaseEnabled:", isFirebaseEnabled);
                 // Hata durumunda yerel olarak kaydet
                 saveScoreLocally(newScore);
             });
         } catch (error) {
-            console.error("Firebase kaydetme hatası:", error);
+            console.error("❌ Firebase kaydetme hatası - TRY-CATCH:", error);
+            console.error("❌ Hata mesajı:", error.message);
+            console.error("❌ Database durumu:", database);
             saveScoreLocally(newScore);
         }
     }
@@ -1183,13 +1193,13 @@
     // PHISHING TEST - Çoklu Soru Sistemi
     let phishingQuestions = [
         {
-            text: "YouTube'da yorum görüyorsun: 'Bu kanala abone ol, ilk 100 kişiye iPhone hediye! Link profilimde'\nNe yaparsın?",
+            text: "YouTube'da bir içerik önerisi gördün: 'Güvenlik ipuçları içeren kısa video - izleyip not alır mısın?'\nNe yaparsın?",
             options: [
-                { text: "Profiline gidip linke tıklarım", correct: false },
-                { text: "Sahte olduğunu düşünür, tıklamam", correct: true },
-                { text: "Arkadaşlarıma da gönderir herkesi uyarırım", correct: false }
+                { text: "Videoyu izler, güvenli bulursam not alırım", correct: true },
+                { text: "Hiç bakmam, şüpheli olabilir", correct: false },
+                { text: "Linki herkese gönderirim", correct: false }
             ],
-            explanation: "YouTube yorumlarındaki hediye linkler genellikle sahte. Gerçek kanallar böyle hediye vermez."
+            explanation: "Eğitici videolar genelde zararsızdır ama kaynağı ve açıklamayı kontrol etmek iyidir. Resmi kanallardan veya güvenilir içerik sağlayıcılardan izlemek en güvenlisidir."
         },
         {
             text: "WhatsApp'ta arkadaşından mesaj geliyor: 'Bu linke tıkla çok komik video var: bit.ly/xyz123'\nNe yaparsın?",
@@ -1210,13 +1220,13 @@
             explanation: "Açılır pencere virüs uyarıları genellikle sahte. Telefonlar böyle uyarı vermez, güvenlik uygulamanız verir."
         },
         {
-            text: "Instagram'dan DM geliyor: 'Şifren çalındı! Hesabını kurtarmak için buraya git: insta-guvenlik.com'\nNe yaparsın?",
+            text: "Instagram uygulaması içinde bir bildirim aldın: 'Hesabında şüpheli giriş tespit edildi. Hesabını korumak için Ayarlar > Güvenlik bölümünü kontrol et.'\nNe yaparsın?",
             options: [
-                { text: "Linke tıklamam, Instagram uygulamasından kontrol ederim", correct: true },
-                { text: "Hemen linke tıklayıp şifremi değiştiririm", correct: false },
-                { text: "Mesajdaki linke tıklayıp bilgilerimi veririm", correct: false }
+                { text: "Uygulamayı açıp Ayarlar > Güvenlik üzerinden kontrol ederim", correct: true },
+                { text: "Gönderilen linke tıklayıp bilgileri girerim", correct: false },
+                { text: "Hiçbir şey yapmam, görmezden gelirim", correct: false }
             ],
-            explanation: "Gerçek Instagram'ın adresi instagram.com'dur. Sahte siteler farklı adresler kullanır. Her zaman resmi uygulamayı kullan."
+            explanation: "Resmi bildirimleri her zaman uygulamanın içinden kontrol et. Harici linklere tıklamak yerine uygulamayı açıp doğrulamak en güvenli yoldur."
         },
         {
             text: "Discord'da tanımadığın biri mesaj atıyor: 'Bedava Roblox/Minecraft premium hesap istiyorsan şifreni yaz'\nNe yaparsın?",
@@ -1353,10 +1363,14 @@
          document.getElementById('final-total-time').textContent = totalTime;
          document.getElementById('final-total-score').textContent = totalScore;
          
-         // Skoru kaydet
-         saveScore(username, totalScore, totalTime);
-         
-         // Timer'ı durdur
+        // Skoru kaydet
+        console.log("💾 Skor kaydediliyor:", {
+            username: username,
+            totalScore: totalScore,
+            totalTime: totalTime,
+            isFirebaseEnabled: isFirebaseEnabled
+        });
+        saveScore(username, totalScore, totalTime);         // Timer'ı durdur
          stopTimer();
      }
 
@@ -1995,6 +2009,13 @@
             questionDiv.className = 'share-question-item';
             questionDiv.textContent = question.text;
             questionDiv.setAttribute('data-index', index);
+            
+            // Tablet için touchstart olayı ekle
+            questionDiv.addEventListener('touchstart', function(e) {
+                e.preventDefault(); // Varsayılan dokunma davranışını engelle
+                const questionIndex = this.getAttribute('data-index');
+                toggleQuestionSelection(questionIndex, this);
+            });
             
             questionDiv.addEventListener('click', function() {
                 const questionIndex = this.getAttribute('data-index');

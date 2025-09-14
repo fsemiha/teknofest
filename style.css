@@ -167,9 +167,9 @@ body, html {
 
 .logo {
     position: fixed;
-    top: 32px;
-    left: 32px;
-    width: 110px;
+    top: 19px;
+    left: 10px;
+    width: 80px;
     height: auto;
     z-index: 3;
 }
@@ -1532,13 +1532,17 @@ body, html {
     border-radius: 8px;
     padding: 12px;
     cursor: pointer;
-    transition: all 0.1s ease;
     text-align: center;
     font-family: 'Gilmer', Arial, sans-serif;
     font-size: 0.95rem;
     color: #fff;
     position: relative;
     min-height: 50px;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
     display: flex;
     align-items: center;
     justify-content: center;
