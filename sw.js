@@ -1,7 +1,7 @@
 // Service Worker for Siber Macera Game
 // Kiosk mode ve offline çalışma için gerekli
 
-const CACHE_NAME = 'siber-macera-v1.2';
+const CACHE_NAME = 'siber-macera-v1.3';
 const urlsToCache = [
   './',
   './index.html',
@@ -9,9 +9,10 @@ const urlsToCache = [
   './style.css',
   './firebase-config.js',
   './manifest.json',
-  // Assets
+  // Assets - Ana oyun görselleri
   './assets/Asset 4.svg',
   './assets/Asset 5.svg',
+  './assets/Asset 6.svg',
   './assets/Asset 9.svg',
   './assets/Asset 10.svg',
   './assets/Asset 11.svg',
@@ -19,13 +20,24 @@ const urlsToCache = [
   './assets/Asset 13.svg',
   './assets/Asset 14.svg',
   './assets/Asset 15.svg',
+  './assets/Asset 22.svg',
+  './assets/Asset 23.svg',
+  './assets/Asset 26.svg',
   './assets/Asset 27.svg',
   './assets/Asset 28.svg',
   './assets/Asset 29.svg',
+  './assets/Asset 30.svg',
+  './assets/Asset 31.svg',
   './assets/Asset 32.svg',
   './assets/Asset 33.svg',
   './assets/Asset 34.svg',
   './assets/Asset 35.svg',
+  './assets/Asset 36.svg',
+  './assets/Asset 37.svg',
+  './assets/Asset 38.svg',
+  './assets/Asset 39.svg',
+  // Özel buton görselleri
+  './assets/anaekranadon.svg',
   './assets/oyungirisekranı.svg',
   './assets/oltalamatestinegec.svg',
   // Fonts
@@ -81,12 +93,61 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request).catch(() => {
-          // If both cache and network fail, return offline page
+        // Return cached version if available
+        if (response) {
+          console.log('Service Worker: Returning cached', event.request.url);
+          return response;
+        }
+        
+        // Try to fetch from network
+        return fetch(event.request).then(fetchResponse => {
+          // Cache successful responses
+          if (fetchResponse.status === 200) {
+            const responseClone = fetchResponse.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return fetchResponse;
+        }).catch(() => {
+          console.log('Service Worker: Network failed for', event.request.url);
+          
+          // Offline fallbacks
           if (event.request.destination === 'document') {
             return caches.match('./index.html');
           }
+          
+          // SVG fallback for missing assets
+          if (event.request.url.includes('.svg')) {
+            const fileName = event.request.url.split('/').pop();
+            console.log('Service Worker: SVG fallback for', fileName);
+            
+            // Create fallback SVG based on filename
+            let fallbackSVG = '';
+            if (fileName.includes('anaekranadon') || fileName.includes('Asset 22')) {
+              fallbackSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="50" viewBox="0 0 120 50">
+                <rect width="120" height="50" fill="#ff6600" rx="8"/>
+                <text x="60" y="32" text-anchor="middle" fill="white" font-family="Arial" font-size="14">Ana Ekran</text>
+              </svg>`;
+            } else if (fileName.includes('oltalamatestinegec')) {
+              fallbackSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="350" height="60" viewBox="0 0 350 60">
+                <rect width="350" height="60" fill="#ff3366" rx="10"/>
+                <text x="175" y="38" text-anchor="middle" fill="white" font-family="Arial" font-size="16" font-weight="bold">OLTALAMA TESTİNE GEÇ</text>
+              </svg>`;
+            } else {
+              fallbackSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="40" viewBox="0 0 100 40">
+                <rect width="100" height="40" fill="#666" rx="5"/>
+                <text x="50" y="25" text-anchor="middle" fill="white" font-family="Arial" font-size="12">Buton</text>
+              </svg>`;
+            }
+            
+            return new Response(fallbackSVG, {
+              headers: { 'Content-Type': 'image/svg+xml' }
+            });
+          }
+          
+          // Generic fallback
+          return new Response('Offline - dosya bulunamadı', { status: 404 });
         });
       })
   );

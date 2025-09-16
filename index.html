@@ -44,7 +44,8 @@
           
           <!-- Ana Ekrana Dön Butonu - Sağ Üst Köşe -->
           <div id="home-button" class="home-button" style="display: none;">
-              <img src="assets/anaekranadon.svg" alt="Ana Ekrana Dön" loading="lazy">
+              <img src="assets/anaekranadon.svg" alt="Ana Ekrana Dön" loading="lazy" 
+                   onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;80&quot; height=&quot;40&quot; viewBox=&quot;0 0 80 40&quot;><rect width=&quot;80&quot; height=&quot;40&quot; fill=&quot;%23ff6600&quot; rx=&quot;5&quot;/><text x=&quot;40&quot; y=&quot;25&quot; text-anchor=&quot;middle&quot; fill=&quot;white&quot; font-family=&quot;Arial&quot; font-size=&quot;12&quot;>Ana Ekran</text></svg>';">
           </div>
         <!-- Ana Panel -->
         <div class="center-panel" id="main-panel">
@@ -142,7 +143,8 @@
                     </div>
                     
                     <div id="continue-to-phishing-btn" class="continue-btn" style="display:block !important; text-align: center; margin-top: 30px; width: 100%; padding: 20px; position: relative; z-index: 100; visibility: visible !important; opacity: 1 !important;" onclick="checkShareAnswers()">
-                        <img src="assets/oltalamatestinegec.svg" alt="Oltalama Testine Geç" style="max-width: 350px; width: 100%; cursor: pointer; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="assets/oltalamatestinegec.svg" alt="Oltalama Testine Geç" style="max-width: 350px; width: 100%; cursor: pointer; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"
+                             onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;350&quot; height=&quot;60&quot; viewBox=&quot;0 0 350 60&quot;><rect width=&quot;350&quot; height=&quot;60&quot; fill=&quot;%23ff3366&quot; rx=&quot;10&quot;/><text x=&quot;175&quot; y=&quot;38&quot; text-anchor=&quot;middle&quot; fill=&quot;white&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot;>OLTALAMA TESTİNE GEÇ</text></svg>';">
                     </div>
                     
                     <div id="share-results" class="share-results" style="display:none;">
@@ -217,7 +219,8 @@
                     </div>
 
                     <div class="final-back-btn" id="final-back-btn">
-                        <img src="assets/anaekranadon.svg" alt="Ana Ekrana Dön">
+                        <img src="assets/anaekranadon.svg" alt="Ana Ekrana Dön"
+                             onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;120&quot; height=&quot;50&quot; viewBox=&quot;0 0 120 50&quot;><rect width=&quot;120&quot; height=&quot;50&quot; fill=&quot;%23ff6600&quot; rx=&quot;8&quot;/><text x=&quot;60&quot; y=&quot;32&quot; text-anchor=&quot;middle&quot; fill=&quot;white&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot;>Ana Ekrana Dön</text></svg>';">
                     </div>
                 </div>
             </div>
@@ -246,8 +249,10 @@
                     </div>
                     
                     <div class="scoreboard-buttons" style="display: flex; gap: 25px; margin-top: 30px;">
-                        <img src="assets/Asset 26.svg" alt="Yenile" id="refresh-scoreboard-btn" style="cursor: pointer; max-width: 170px; transition: transform 0.2s ease;">
-                        <img src="assets/anaekranadon.svg" alt="Ana Menü" id="scoreboard-back-btn" style="cursor: pointer; max-width: 170px; transition: transform 0.2s ease;">
+                        <img src="assets/Asset 26.svg" alt="Yenile" id="refresh-scoreboard-btn" style="cursor: pointer; max-width: 170px; transition: transform 0.2s ease;"
+                             onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;120&quot; height=&quot;40&quot; viewBox=&quot;0 0 120 40&quot;><rect width=&quot;120&quot; height=&quot;40&quot; fill=&quot;%2300cc99&quot; rx=&quot;5&quot;/><text x=&quot;60&quot; y=&quot;25&quot; text-anchor=&quot;middle&quot; fill=&quot;white&quot; font-family=&quot;Arial&quot; font-size=&quot;12&quot;>Yenile</text></svg>';">
+                        <img src="assets/anaekranadon.svg" alt="Ana Menü" id="scoreboard-back-btn" style="cursor: pointer; max-width: 170px; transition: transform 0.2s ease;"
+                             onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;120&quot; height=&quot;40&quot; viewBox=&quot;0 0 120 40&quot;><rect width=&quot;120&quot; height=&quot;40&quot; fill=&quot;%23ff6600&quot; rx=&quot;5&quot;/><text x=&quot;60&quot; y=&quot;25&quot; text-anchor=&quot;middle&quot; fill=&quot;white&quot; font-family=&quot;Arial&quot; font-size=&quot;12&quot;>Ana Menü</text></svg>';">
                     </div>
                 </div>
             </div>
@@ -2837,6 +2842,29 @@
             document.addEventListener('DOMContentLoaded', initializeSafariPWA);
         } else {
             initializeSafariPWA();
+        }
+        
+        // Service Worker kaydı - offline çalışma için
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('./sw.js');
+                    console.log('✅ Service Worker kaydedildi:', registration.scope);
+                    
+                    // Yeni version varsa otomatik güncelle
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('🔄 Yeni Service Worker hazır, sayfa yenileniyor...');
+                                window.location.reload();
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.warn('⚠️ Service Worker kaydedilemedi:', error);
+                }
+            });
         }
     });
     </script>
