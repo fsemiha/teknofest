@@ -1259,7 +1259,7 @@
     text: "YouTube'da en sevdiğin youtuber'ın videosunda açıklama kısmında link var:\n 'ÜCRETSİZ ROBUx KAZANMAK İÇİN TIKLA!'\nNe yaparsın?",
     options: [
         { text: "Hemen tıklarım, ücretsiz Robux istiyorum!", correct: false },
-        { text: "Bu bir tuzak, youtuber'ın gerçek olup olmadığını kontrol ederim", correct: true },
+        { text: "Bu sahte bir tuzak, youtuber'ın gerçek olup olmadığını kontrol ederim", correct: true },
         { text: "Linki kopyalayıp arkadaşlarıma gönderirim", correct: false }
     ],
     explanation: "Ücretsiz oyun parası vaat eden linkler genellikle dolandırıcılık!\n\n Gerçek YouTuber'lar böyle şeyler paylaşmaz. Her zaman şüpheli ol."
@@ -1430,16 +1430,16 @@
 
     // PAYLAŞ/SAKLA paneli - 10 Soru Sistemi
     let shareQuestions = [
-        { text: 'Adın ve Soyadın', shareable: false, explanation: 'Adınız ve soyadınız kişisel kimliğinizle doğrudan bağlantılıdır, internette tanımadığınız kişilerle paylaşmaktan kaçının.' },
-        { text: 'En sevdiğin renk', shareable: true, explanation: 'Renk tercihin seni tanımlar ama kişisel gizliliğini tehlikeye atmaz.' },
-        { text: 'E-posta adresin', shareable: false, explanation: 'E-posta adresiniz kimlik avı (oltalama) saldırıları için kullanılabilir. Güvenmediğiniz kişilerle paylaşmaktan kaçının.' },
-        { text: 'Telefon numaran', shareable: false, explanation: 'Telefon numaranız paylaşıldığında istenmeyen aramalar, mesajlar veya dolandırıcılık girişimlerine yol açabilir.' },
-        { text: 'Hobin (örneğin futbol)', shareable: true, explanation: 'Hobiler ve ilgi alanları ortak noktası olan insanlarla bağlantı kurmanın güvenli bir yoludur.' },
-        { text: 'TC kimlik numaran', shareable: false, explanation: 'Kimlik numaran çok özel bir bilgidir. Dolandırıcılık ve kimlik hırsızlığı için kullanılabilir, asla paylaşma.' },
-        { text: 'En sevdiğin film', shareable: true, explanation: 'Film zevkin güvenle paylaşılabilir ve yeni arkadaşlıklar kurman için ortak konu olabilir.' },
-        { text: 'Ev adresin', shareable: false, explanation: 'Ev adresiniz fiziksel güvenliğinizle ilgilidir. İnternette asla tanımadığınız kişilerle paylaşılmamalıdır.' },
-        { text: 'En sevdiğin spor', shareable: true, explanation: 'Spor tercihlerin güvenle paylaşılabilir ve yeni arkadaşlıklar kurmen için faydalı olabilir.' },
-        { text: 'Sosyal medya şifren', shareable: false, explanation: 'Şifreler asla paylaşılmamalıdır. Hesaplarının güvenliği için kritiktir.' }
+        { text: 'Sınıfın (örneğin 5-A)', shareable: false, explanation: 'Hangi sınıfta okuduğun kişisel bir bilgidir. Tanımadığın kişilerle paylaşmamalısın!' },
+        { text: 'En sevdiğin renk', shareable: true, explanation: 'Renk tercihin güvenle paylaşılabilir ve arkadaş edinmek için güzel bir konudur.' },
+        { text: 'Okul numaranız', shareable: false, explanation: 'Okul numaran gibi özel kimlik bilgilerini sadece öğretmenin ve ailen bilmeli.' },
+        { text: 'En sevdiğin çizgi film', shareable: true, explanation: 'Çizgi film zevkin paylaşılabilir ve ortak ilgi alanı olan arkadaşlar bulabilirsin.' },
+        { text: 'Hobin (örneğin futbol)', shareable: true, explanation: 'Hobiler güvenle paylaşılabilir ve yeni arkadaşlıklar kurman için harika konulardır.' },
+        { text: 'Ev adresin', shareable: false, explanation: 'Ev adresin çok gizli bir bilgidir. Sadece ailen ve yakın akrabalar bilmeli.' },
+        { text: 'En sevdiğin oyun', shareable: true, explanation: 'Oyun tercihlerin güvenle paylaşılabilir ve oyun arkadaşları bulabilirsin.' },
+        { text: 'Doğum tarihin', shareable: false, explanation: 'Doğum tarihin kişisel bir bilgidir. Kötü niyetli kişiler bu bilgiyi kötüye kullanabilir.' },
+        { text: 'En sevdiğin hayvan', shareable: true, explanation: 'Hayvan sevgin güvenle paylaşılabilir ve hayvansever arkadaşlar edinebilirsin.' },
+        { text: 'Telefon numaran', shareable: false, explanation: 'Telefon numaran çok özel bir bilgidir. Sadece ailen ve çok yakın arkadaşların bilmeli.' }
     ];
 
     let selectedAnswers = {};
@@ -1820,31 +1820,19 @@
         console.log('\x07');
     }
     
-    // Başarı sesi fonksiyonu (Share bölümü doğru seçimler için)
+    // Başarı sesi fonksiyonu (Share bölümü doğru seçimler için) - GELİŞTİRİLMİŞ
     function playSuccessSound() {
         try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // AudioContext'i aktifleştir
             if (ctx.state === 'suspended') {
-                ctx.resume();
+                ctx.resume().then(() => {
+                    playSuccessSoundInternal(ctx);
+                });
+            } else {
+                playSuccessSoundInternal(ctx);
             }
-            
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            
-            // Pozitif müzikal ton - C major akor benzeri
-            osc.frequency.setValueAtTime(523, ctx.currentTime); // C5
-            osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1); // E5
-            osc.frequency.setValueAtTime(783, ctx.currentTime + 0.2); // G5
-            
-            osc.type = 'sine';
-            gain.gain.setValueAtTime(0.08, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-            
-            osc.start();
-            osc.stop(ctx.currentTime + 0.4);
             
         } catch (e) {
             console.log('Başarı sesi hatası:', e);
@@ -1855,7 +1843,27 @@
             navigator.vibrate([30, 20, 50]);
         }
         
-        console.log('✅ Doğru seçim!');
+        console.log('✅ Doğru seçim sesi çalınıyor!');
+    }
+    
+    function playSuccessSoundInternal(ctx) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        // Pozitif müzikal ton - C major akor benzeri
+        osc.frequency.setValueAtTime(523, ctx.currentTime); // C5
+        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1); // E5
+        osc.frequency.setValueAtTime(783, ctx.currentTime + 0.2); // G5
+        
+        osc.type = 'sine';
+        gain.gain.setValueAtTime(0.12, ctx.currentTime); // Ses seviyesi artırıldı
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+        
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.4);
     }
     
     // Buton ses efektleri
@@ -2124,14 +2132,26 @@
             element.classList.add('correct');
             shareScore += 30;
             addScore(30);
-            playSuccessSound();
+            
+            // Geliştirilmiş ses çalma - browser kısıtlamalarını aş
+            setTimeout(() => {
+                playSuccessSound();
+            }, 50);
+            
+            console.log("✅ Doğru seçim: " + question.text + " (+30 puan)");
         } else {
             // Yanlış seçim - PUAN DÜŞÜR, SES ÇAL ve açıklama göster!
             element.classList.add('wrong');
             shareScore -= 15; // Yanlış cevap için puan düşür
             addScore(-15);
-            playBuzzerSound();
+            
+            // Geliştirilmiş ses çalma - browser kısıtlamalarını aş
+            setTimeout(() => {
+                playBuzzerSound();
+            }, 50);
+            
             showExplanation(question.explanation, false);
+            console.log("❌ Yanlış seçim: " + question.text + " (-15 puan)");
         }
         
         // Submit butonunu al
@@ -2632,7 +2652,109 @@
 
     
     // Yükleme ekranını gizle
+    // Oyun yükleniyor müziği
+    function playLoadingMusic() {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
+            // Siber/elektronik temalı melodi notaları
+            const melody = [
+                { freq: 261.63, time: 0.0, duration: 0.3 }, // C4
+                { freq: 329.63, time: 0.3, duration: 0.3 }, // E4
+                { freq: 392.00, time: 0.6, duration: 0.3 }, // G4
+                { freq: 523.25, time: 0.9, duration: 0.4 }, // C5
+                { freq: 659.25, time: 1.3, duration: 0.3 }, // E5
+                { freq: 783.99, time: 1.6, duration: 0.3 }, // G5
+                { freq: 1046.50, time: 1.9, duration: 0.5 }, // C6
+                
+                // İkinci dalga - daha dramatik
+                { freq: 392.00, time: 2.5, duration: 0.2 }, // G4
+                { freq: 440.00, time: 2.7, duration: 0.2 }, // A4
+                { freq: 493.88, time: 2.9, duration: 0.2 }, // B4
+                { freq: 523.25, time: 3.1, duration: 0.4 }, // C5
+                { freq: 659.25, time: 3.5, duration: 0.6 }, // E5 - uzun
+            ];
+
+            // Ana melodi
+            melody.forEach((note, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Siber tema için triangle wave
+                oscillator.type = 'triangle';
+                oscillator.frequency.setValueAtTime(note.freq, audioContext.currentTime + note.time);
+                
+                // Fade in-out efekti
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime + note.time);
+                gainNode.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + note.time + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + note.time + note.duration);
+                
+                oscillator.start(audioContext.currentTime + note.time);
+                oscillator.stop(audioContext.currentTime + note.time + note.duration);
+            });
+
+            // Alt bas notaları - derinlik katmak için
+            const bassNotes = [
+                { freq: 65.41, time: 0.0, duration: 1.0 }, // C2
+                { freq: 87.31, time: 1.0, duration: 1.0 }, // F2
+                { freq: 98.00, time: 2.0, duration: 1.0 }, // G2
+                { freq: 130.81, time: 3.0, duration: 1.2 }, // C3
+            ];
+
+            bassNotes.forEach((note) => {
+                const bassOsc = audioContext.createOscillator();
+                const bassGain = audioContext.createGain();
+                
+                bassOsc.connect(bassGain);
+                bassGain.connect(audioContext.destination);
+                
+                bassOsc.type = 'sine';
+                bassOsc.frequency.setValueAtTime(note.freq, audioContext.currentTime + note.time);
+                
+                bassGain.gain.setValueAtTime(0.06, audioContext.currentTime + note.time);
+                bassGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + note.time + note.duration);
+                
+                bassOsc.start(audioContext.currentTime + note.time);
+                bassOsc.stop(audioContext.currentTime + note.time + note.duration);
+            });
+
+            // Elektronik efektler - siber tema
+            for (let i = 0; i < 6; i++) {
+                const effectOsc = audioContext.createOscillator();
+                const effectGain = audioContext.createGain();
+                
+                effectOsc.connect(effectGain);
+                effectGain.connect(audioContext.destination);
+                
+                effectOsc.type = 'square';
+                const randomFreq = 800 + Math.random() * 400; // 800-1200 Hz
+                const randomTime = Math.random() * 3.5; // 0-3.5 saniye arası
+                
+                effectOsc.frequency.setValueAtTime(randomFreq, audioContext.currentTime + randomTime);
+                effectGain.gain.setValueAtTime(0.02, audioContext.currentTime + randomTime);
+                effectGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + randomTime + 0.1);
+                
+                effectOsc.start(audioContext.currentTime + randomTime);
+                effectOsc.stop(audioContext.currentTime + randomTime + 0.1);
+            }
+
+            console.log('🎵 Oyun yükleniyor müziği başlatıldı!');
+
+        } catch (e) {
+            console.log('Loading müzik hatası:', e);
+        }
+    }
+
     window.addEventListener('load', function() {
+        // Müziği başlat
+        playLoadingMusic();
+        
         setTimeout(function() {
             const loadingScreen = document.getElementById('loading-screen');
             if (loadingScreen) {
