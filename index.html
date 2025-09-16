@@ -248,6 +248,13 @@
                         </div>
                     </div>
                     
+                    <!-- Sayfalama Kontrolleri -->
+                    <div class="pagination-controls" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin: 20px 0;">
+                        <button id="prev-page-btn" style="background: #ff6600; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 14px;" disabled>◀ Önceki</button>
+                        <span id="page-info" style="color: #ffffff; font-size: 14px; min-width: 100px; text-align: center;">Sayfa 1 / 1</span>
+                        <button id="next-page-btn" style="background: #ff6600; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 14px;" disabled>Sonraki ▶</button>
+                    </div>
+                    
                     <div class="scoreboard-buttons" style="display: flex; gap: 25px; margin-top: 30px;">
                         <img src="assets/Asset 26.svg" alt="Yenile" id="refresh-scoreboard-btn" style="cursor: pointer; max-width: 170px; transition: transform 0.2s ease;"
                              onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;120&quot; height=&quot;40&quot; viewBox=&quot;0 0 120 40&quot;><rect width=&quot;120&quot; height=&quot;40&quot; fill=&quot;%2300cc99&quot; rx=&quot;5&quot;/><text x=&quot;60&quot; y=&quot;25&quot; text-anchor=&quot;middle&quot; fill=&quot;white&quot; font-family=&quot;Arial&quot; font-size=&quot;12&quot;>Yenile</text></svg>';">
@@ -448,6 +455,11 @@
     let timerStarted = false;
     let currentUsername = ''; // Kullanıcı adı
     
+    // Sayfalama değişkenleri
+    let currentPage = 1;
+    let allScores = [];
+    let scoresPerPage = 6;
+    
     // Bölüm skorları
     let passwordScore = 0;
     let shareScore = 0;
@@ -599,23 +611,10 @@
         return deviceId;
     }
     
-    // Ana oyun skorboard'u için ekran boyutuna göre maksimum skor sayısı (Artırılmış)
+    // Ana oyun skorboard'u için ekran boyutuna göre maksimum skor sayısı (Her sayfada 6 skor)
     function getMaxDisplayScores() {
-        const screenHeight = window.innerHeight;
-        const screenWidth = window.innerWidth;
-        
-        // 500+ skor optimizasyonu - büyük turnuva için daha fazla skor gösterimi
-        if (screenWidth >= 1400 && screenHeight >= 900) {
-            return 50; // Büyük ekran - 50 skor (500+ destekli)
-        } else if (screenWidth >= 1200 && screenHeight >= 768) {
-            return 35; // Orta büyük ekran - 35 skor
-        } else if (screenWidth >= 900 && screenHeight >= 600) {
-            return 25; // Orta ekran - 25 skor
-        } else if (screenWidth >= 600) {
-            return 20; // Küçük ekran - 20 skor
-        } else {
-            return 15; // Çok küçük ekran - 15 skor
-        }
+        // Her sayfada sabit 6 skor göster
+        return 6;
     }
     
     function convertTimeToSeconds(timeString) {
@@ -630,47 +629,80 @@
         scoreboardList.innerHTML = '<div style="text-align: center; color: #ffaa00; padding: 20px;">📊 Skorlar yükleniyor...</div>';
         
         getScores().then(scores => {
+            allScores = scores; // Global değişkene kaydet
+            
             if (scores.length === 0) {
                 scoreboardList.innerHTML = '<div style="text-align: center; color: #cccccc; padding: 20px;">Henüz kayıtlı skor yok.</div>';
+                updatePaginationControls(0);
                 return;
             }
             
-            scoreboardList.innerHTML = '';
-            
-            // Ekran boyutuna göre gösterilecek skor sayısını belirle
-            const maxDisplayScores = getMaxDisplayScores();
-            const displayScores = scores.slice(0, maxDisplayScores);
-            
-            displayScores.forEach((score, index) => {
-                const row = document.createElement('div');
-                row.className = 'scoreboard-row';
-                if (index === 0) row.classList.add('top-score');
-                
-                // Device indicator ekle
-                const deviceIndicator = score.deviceId ? 
-                    `<span style="font-size: 0.7rem; color: #888; margin-left: 5px;">📱</span>` : '';
-                
-                row.innerHTML = `
-                    <span class="scoreboard-rank">${index + 1}</span>
-                    <span class="scoreboard-name">${score.username}${deviceIndicator}</span>
-                    <span class="scoreboard-score">${score.score}</span>
-                    <span class="scoreboard-time">${score.time}</span>
-                    <span class="scoreboard-date">${score.date}</span>
-                `;
-                
-                scoreboardList.appendChild(row);
-            });
-            
-            // Firebase durumu console'da yazdır (ekranda görünmez)
-            if (isFirebaseEnabled) {
-                console.log('🌐 Çoklu ekran modu aktif - Tüm cihazlardan skorlar');
-            } else {
-                console.log('💾 Yerel mod - Sadece bu cihazın skorları');
-            }
+            displayCurrentPage();
+            updatePaginationControls(scores.length);
         }).catch(error => {
             console.error('Skorlar yüklenirken hata:', error);
             scoreboardList.innerHTML = '<div style="text-align: center; color: #ff4444; padding: 20px;">❌ Skorlar yüklenemedi. Tekrar deneyin.</div>';
+            updatePaginationControls(0);
         });
+    }
+    
+    function displayCurrentPage() {
+        const scoreboardList = document.getElementById('scoreboard-list');
+        scoreboardList.innerHTML = '';
+        
+        // Mevcut sayfa için skorları hesapla
+        const startIndex = (currentPage - 1) * scoresPerPage;
+        const endIndex = startIndex + scoresPerPage;
+        const displayScores = allScores.slice(startIndex, endIndex);
+        
+        displayScores.forEach((score, index) => {
+            const row = document.createElement('div');
+            row.className = 'scoreboard-row';
+            const globalIndex = startIndex + index;
+            if (globalIndex === 0) row.classList.add('top-score');
+            
+            // Device indicator ekle
+            const deviceIndicator = score.deviceId ? 
+                `<span style="font-size: 0.7rem; color: #888; margin-left: 5px;">📱</span>` : '';
+            
+            row.innerHTML = `
+                <span class="scoreboard-rank">${globalIndex + 1}</span>
+                <span class="scoreboard-name">${score.username}${deviceIndicator}</span>
+                <span class="scoreboard-score">${score.score}</span>
+                <span class="scoreboard-time">${score.time}</span>
+                <span class="scoreboard-date">${score.date}</span>
+            `;
+            
+            scoreboardList.appendChild(row);
+        });
+        
+        // Firebase durumu console'da yazdır (ekranda görünmez)
+        if (isFirebaseEnabled) {
+            console.log('🌐 Çoklu ekran modu aktif - Tüm cihazlardan skorlar');
+        } else {
+            console.log('💾 Yerel mod - Sadece bu cihazın skorları');
+        }
+    }
+    
+    function updatePaginationControls(totalScores) {
+        const totalPages = Math.ceil(totalScores / scoresPerPage);
+        const pageInfo = document.getElementById('page-info');
+        const prevBtn = document.getElementById('prev-page-btn');
+        const nextBtn = document.getElementById('next-page-btn');
+        
+        if (pageInfo) {
+            pageInfo.textContent = `Sayfa ${currentPage} / ${totalPages || 1}`;
+        }
+        
+        if (prevBtn) {
+            prevBtn.disabled = currentPage <= 1;
+            prevBtn.style.opacity = currentPage <= 1 ? '0.5' : '1';
+        }
+        
+        if (nextBtn) {
+            nextBtn.disabled = currentPage >= totalPages;
+            nextBtn.style.opacity = currentPage >= totalPages ? '0.5' : '1';
+        }
     }
     
     // Ana oyunda gerçek zamanlı skorboard için dinleyici kurulumu
@@ -1206,14 +1238,14 @@
 
     // PHISHING TEST - Çoklu Soru Sistemi
     let phishingQuestions = [
-{
-    text: "Telefonunda açılır pencere çıkıyor: 'DİKKAT! Telefonunuz virüslü. Hemen temizlemek için TIKLA'\nNe yaparsın?",
+        {
+    text: "TikTok'ta viral olan bir challenge videosunda yorum gördün: 'Bu challenge'ı yapmak için şifre123 kullan, süper havalı hesap aç!'\nNe yaparsın?",
     options: [
-        { text: "Hemen tıklarım, telefonum tehlikede", correct: false },
-        { text: "Bu sahte bir uyarı, kapatırım", correct: true },
-        { text: "Tıklayıp virüs programını indiririm", correct: false }
+        { text: "Hemen şifre123'ü kullanarak hesap açarım", correct: false },
+        { text: "Bu güvensiz görünüyor, kendi güçlü şifremi oluştururum", correct: true },
+        { text: "Arkadaşlarıma da bu şifreyi söylerim", correct: false }
     ],
-    explanation: "Açılır pencere virüs uyarıları genellikle sahte. Telefonlar böyle uyarı vermez, güvenlik uygulamanız verir."
+    explanation: "Herkesin kullandığı basit şifreler çok tehlikeli! Her zaman kendi benzersiz ve güçlü şifreni oluştur. Şifreleri asla paylaşma."
 },
 {
     text: "YouTube'da en sevdiğin youtuber'ın videosunda açıklama kısmında link var: 'ÜCRETSİZ ROBUx KAZANMAK İÇİN TIKLA!'\nNe yaparsın?",
@@ -2657,6 +2689,7 @@
         const refreshBtn = document.getElementById('refresh-scoreboard-btn');
         if (refreshBtn) {
             refreshBtn.onclick = function() {
+                currentPage = 1; // İlk sayfaya dön
                 displayScoreboard();
             };
         }
@@ -2665,8 +2698,34 @@
         const scoreboardBackBtn = document.getElementById('scoreboard-back-btn');
         if (scoreboardBackBtn) {
             scoreboardBackBtn.onclick = function() {
+                currentPage = 1; // Sayfa sıfırla
                 document.getElementById('scoreboard-panel').style.display = 'none';
                 document.getElementById('main-panel').style.display = 'flex';
+            };
+        }
+        
+        // Sayfalama butonları
+        const prevPageBtn = document.getElementById('prev-page-btn');
+        const nextPageBtn = document.getElementById('next-page-btn');
+        
+        if (prevPageBtn) {
+            prevPageBtn.onclick = function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    displayCurrentPage();
+                    updatePaginationControls(allScores.length);
+                }
+            };
+        }
+        
+        if (nextPageBtn) {
+            nextPageBtn.onclick = function() {
+                const totalPages = Math.ceil(allScores.length / scoresPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    displayCurrentPage();
+                    updatePaginationControls(allScores.length);
+                }
             };
         }
         
