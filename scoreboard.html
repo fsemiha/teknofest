@@ -761,23 +761,9 @@
 
         let currentPage = 1;
         
-        // Ekran boyutuna göre dinamik skor sayısı (Artırılmış)
+        // Sabit 6 skor göster
         function getItemsPerPage() {
-            const screenHeight = window.innerHeight;
-            const screenWidth = window.innerWidth;
-            
-            // Teknofest büyük ekran optimizasyonu - Daha fazla skor
-            if (screenWidth >= 1400 && screenHeight >= 900) {
-                return 35; // Büyük ekran - 35 skor (artırıldı)
-            } else if (screenWidth >= 1200 && screenHeight >= 768) {
-                return 25; // Orta büyük ekran - 25 skor (artırıldı)
-            } else if (screenWidth >= 900 && screenHeight >= 600) {
-                return 18; // Orta ekran - 18 skor (artırıldı)
-            } else if (screenWidth >= 600) {
-                return 12; // Küçük ekran - 12 skor (artırıldı)
-            } else {
-                return 8; // Çok küçük ekran - 8 skor (artırıldı)
-            }
+            return 6; // Tüm ekran boyutları için sabit 6 skor
         }
         
         let totalScores = [];
@@ -921,7 +907,7 @@
                 });
 
                 // Firebase durumu console'da yazdır (ekranda görünmez)
-                const currentItemsPerPage = getItemsPerPage();
+                const currentItemsPerPage = 6; // Sabit 6 skor
                 const screenInfo = `(${currentItemsPerPage} skor/sayfa)`;
                 
                 if (isFirebaseEnabled) {
