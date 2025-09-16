@@ -494,13 +494,13 @@
                 
                 // Skor limitini kontrol et ve eski skorları temizle
                 scoresRef.orderByChild('score').limitToLast(600).once('value', (snapshot) => {
-                    const allScores = [];
+                    const firebaseScores = [];
                     snapshot.forEach((child) => {
-                        allScores.push({ key: child.key, ...child.val() });
+                        firebaseScores.push({ key: child.key, ...child.val() });
                     });
                     
                     // Sıralama: önce puan, sonra süre
-                    allScores.sort((a, b) => {
+                    firebaseScores.sort((a, b) => {
                         if (b.score !== a.score) {
                             return b.score - a.score;
                         }
@@ -510,8 +510,8 @@
                     });
                     
                     // En fazla 500 skoru tut, fazlasını sil
-                    if (allScores.length > 500) {
-                        const toDelete = allScores.slice(500);
+                    if (firebaseScores.length > 500) {
+                        const toDelete = firebaseScores.slice(500);
                         toDelete.forEach(scoreToDelete => {
                             scoresRef.child(scoreToDelete.key).remove();
                         });
@@ -650,10 +650,14 @@
         const scoreboardList = document.getElementById('scoreboard-list');
         scoreboardList.innerHTML = '';
         
+        console.log(`📄 Sayfa gösteriliyor: ${currentPage}, Toplam skor: ${allScores.length}, Sayfa başına: ${scoresPerPage}`);
+        
         // Mevcut sayfa için skorları hesapla
         const startIndex = (currentPage - 1) * scoresPerPage;
         const endIndex = startIndex + scoresPerPage;
         const displayScores = allScores.slice(startIndex, endIndex);
+        
+        console.log(`📊 Gösterilecek skorlar: ${displayScores.length} (${startIndex} - ${endIndex})`);
         
         displayScores.forEach((score, index) => {
             const row = document.createElement('div');
@@ -690,6 +694,8 @@
         const prevBtn = document.getElementById('prev-page-btn');
         const nextBtn = document.getElementById('next-page-btn');
         
+        console.log(`🎛️ Pagination güncelleniyor: Sayfa ${currentPage}/${totalPages}, Toplam skor: ${totalScores}`);
+        
         if (pageInfo) {
             pageInfo.textContent = `Sayfa ${currentPage} / ${totalPages || 1}`;
         }
@@ -697,11 +703,13 @@
         if (prevBtn) {
             prevBtn.disabled = currentPage <= 1;
             prevBtn.style.opacity = currentPage <= 1 ? '0.5' : '1';
+            console.log(`⬅️ Önceki buton: ${currentPage <= 1 ? 'Disabled' : 'Enabled'}`);
         }
         
         if (nextBtn) {
             nextBtn.disabled = currentPage >= totalPages;
             nextBtn.style.opacity = currentPage >= totalPages ? '0.5' : '1';
+            console.log(`➡️ Sonraki buton: ${currentPage >= totalPages ? 'Disabled' : 'Enabled'}`);
         }
     }
     
@@ -2704,29 +2712,34 @@
             };
         }
         
-        // Sayfalama butonları
+        // Sayfalama butonları event listeners
         const prevPageBtn = document.getElementById('prev-page-btn');
         const nextPageBtn = document.getElementById('next-page-btn');
         
+        // Eski event listener'ları temizle
         if (prevPageBtn) {
-            prevPageBtn.onclick = function() {
+            prevPageBtn.onclick = null;
+            prevPageBtn.addEventListener('click', function() {
                 if (currentPage > 1) {
                     currentPage--;
+                    console.log('🔙 Önceki sayfaya geçiliyor:', currentPage);
                     displayCurrentPage();
                     updatePaginationControls(allScores.length);
                 }
-            };
+            });
         }
         
         if (nextPageBtn) {
-            nextPageBtn.onclick = function() {
+            nextPageBtn.onclick = null;
+            nextPageBtn.addEventListener('click', function() {
                 const totalPages = Math.ceil(allScores.length / scoresPerPage);
                 if (currentPage < totalPages) {
                     currentPage++;
+                    console.log('➡️ Sonraki sayfaya geçiliyor:', currentPage);
                     displayCurrentPage();
                     updatePaginationControls(allScores.length);
                 }
-            };
+            });
         }
         
         // Firebase gerçek zamanlı skorboard sistemini başlat
