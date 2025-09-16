@@ -219,7 +219,7 @@
                     </div>
 
                     <div class="final-back-btn" id="final-back-btn">
-                        <img src="assets/anaekranadon.svg" alt="Ana Ekrana Dön"
+                        <img src="assets/Asset 22.svg" alt="Ana Ekrana Dön"
                              onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;120&quot; height=&quot;50&quot; viewBox=&quot;0 0 120 50&quot;><rect width=&quot;120&quot; height=&quot;50&quot; fill=&quot;%23ff6600&quot; rx=&quot;8&quot;/><text x=&quot;60&quot; y=&quot;32&quot; text-anchor=&quot;middle&quot; fill=&quot;white&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot;>Ana Ekrana Dön</text></svg>';">
                     </div>
                 </div>
@@ -1207,50 +1207,50 @@
     // PHISHING TEST - Çoklu Soru Sistemi
     let phishingQuestions = [
         {
-            text: "YouTube'da bir içerik önerisi gördün: 'Güvenlik ipuçları içeren kısa video - izleyip not alır mısın?'\nNe yaparsın?",
-            options: [
-                { text: "Videoyu izler, güvenli bulursam not alırım", correct: true },
-                { text: "Hiç bakmam, şüpheli olabilir", correct: false },
-                { text: "Linki herkese gönderirim", correct: false }
-            ],
-            explanation: "Eğitici videolar genelde zararsızdır ama kaynağı ve açıklamayı kontrol etmek iyidir. Resmi kanallardan veya güvenilir içerik sağlayıcılardan izlemek en güvenlisidir."
-        },
-        {
-            text: "WhatsApp'ta arkadaşından mesaj geliyor: 'Bu linke tıkla çok komik video var: bit.ly/xyz123'\nNe yaparsın?",
-            options: [
-                { text: "Arkadaşımdan geldiği için güvenle tıklarım", correct: false },
-                { text: "Önce arkadaşıma sorarak doğruluğunu kontrol ederim", correct: true },
-                { text: "Hemen tıklarım, arkadaşım gönderdi sonuçta", correct: false }
-            ],
-            explanation: "Arkadaşının hesabı çalınmış olabilir. Şüpheli linkler için önce kişiyi arayıp doğrulamak en iyisi."
-        },
-        {
-            text: "Telefonunda açılır pencere çıkıyor: 'DİKKAT! Telefonunuz virüslü. Hemen temizlemek için TIKLA'\nNe yaparsın?",
-            options: [
-                { text: "Hemen tıklarım, telefonum tehlikede", correct: false },
-                { text: "Bu sahte bir uyarı, kapatırım", correct: true },
-                { text: "Tıklayıp virüs programını indiririm", correct: false }
-            ],
-            explanation: "Açılır pencere virüs uyarıları genellikle sahte. Telefonlar böyle uyarı vermez, güvenlik uygulamanız verir."
-        },
-        {
-            text: "Instagram uygulaması içinde bir bildirim aldın: 'Hesabında şüpheli giriş tespit edildi. Hesabını korumak için Ayarlar > Güvenlik bölümünü kontrol et.'\nNe yaparsın?",
-            options: [
-                { text: "Uygulamayı açıp Ayarlar > Güvenlik üzerinden kontrol ederim", correct: true },
-                { text: "Gönderilen linke tıklayıp bilgileri girerim", correct: false },
-                { text: "Hiçbir şey yapmam, görmezden gelirim", correct: false }
-            ],
-            explanation: "Resmi bildirimleri her zaman uygulamanın içinden kontrol et. Harici linklere tıklamak yerine uygulamayı açıp doğrulamak en güvenli yoldur."
-        },
-        {
-            text: "Discord'da tanımadığın biri mesaj atıyor: 'Bedava Roblox/Minecraft premium hesap istiyorsan şifreni yaz'\nNe yaparsın?",
-            options: [
-                { text: "Bedava hesap için şifremi veririm", correct: false },
-                { text: "Bu bir tuzak, engellerim ve bildiririm", correct: true },
-                { text: "Arkadaşlarıma da söylerim belki onlar da ister", correct: false }
-            ],
-            explanation: "Asla kimseyle oyun şifrelerini paylaşma! Bedava hesap vaadiyle bilgilerini çalmaya çalışıyorlar."
-        }
+    text: "TikTok'ta viral olan bir challenge videosunda yorum gördün: 'Bu challenge'ı yapmak için şifre123 kullan, süper havalı hesap aç!'\nNe yaparsın?",
+    options: [
+        { text: "Hemen şifre123'ü kullanarak hesap açarım", correct: false },
+        { text: "Bu güvensiz görünüyor, kendi güçlü şifremi oluştururum", correct: true },
+        { text: "Arkadaşlarıma da bu şifreyi söylerim", correct: false }
+    ],
+    explanation: "Herkesin kullandığı basit şifreler çok tehlikeli! Her zaman kendi benzersiz ve güçlü şifreni oluştur. Şifreleri asla paylaşma."
+},
+{
+    text: "YouTube'da en sevdiğin youtuber'ın videosunda açıklama kısmında link var: 'ÜCRETSİZ ROBUx KAZANMAK İÇİN TIKLA!'\nNe yaparsın?",
+    options: [
+        { text: "Hemen tıklarım, ücretsiz Robux istiyorum!", correct: false },
+        { text: "Bu sahte bir tuzak, youtuber'ın gerçek olup olmadığını kontrol ederim", correct: true },
+        { text: "Linki kopyalayıp arkadaşlarıma gönderirim", correct: false }
+    ],
+    explanation: "Ücretsiz oyun parası vaat eden linkler genellikle dolandırıcılık! Gerçek YouTuber'lar böyle şeyler paylaşmaz. Her zaman şüpheli ol."
+},
+{
+    text: "WhatsApp'ta tanımadığın bir numaradan mesaj geliyor: 'Merhaba! Okul arkadaşınım, telefon numaramı değiştirdim. Acil para lazım, annene söyle lütfen.'\nNe yaparsın?",
+    options: [
+        { text: "Hemen anneme söylerim, arkadaşım yardıma ihtiyacı var", correct: false },
+        { text: "Bu şüpheli, önce kimliğini doğrulayacağım sorular sorarım", correct: true },
+        { text: "Para göndermek için banka bilgilerini sorarım", correct: false }
+    ],
+    explanation: "Bu klasik bir dolandırıcılık yöntemi! Tanımadığın numaralardan gelen para isteklerine asla güvenme. Önce kimliği doğrula."
+},
+{
+    text: "Discord'da oyun oynarken biri özel mesaj atıyor: 'Hey! Minecraft server'ımıza katıl, admin olmak ister misin? Şifreni ver, seni yetkili yapayım.'\nNe yaparsın?",
+    options: [
+        { text: "Süper! Hemen şifremi veririm, admin olmak istiyorum", correct: false },
+        { text: "Şifremi asla kimseyle paylaşmam, bu bir tuzak", correct: true },
+        { text: "Önce arkadaşlarıma sorayım, onlar da admin olmak isteyebilir", correct: false }
+    ],
+    explanation: "Oyun şifrelerini ASLA kimseyle paylaşma! Gerçek admin'ler şifreni istemez. Bu hesap çalma yöntemidir."
+},
+{
+    text: "Instagram'da tanınmış bir markanın sahte hesabından mesaj aldın: 'TEBRİKLER! iPhone 15 kazandın! Almak için bu linke tıkla ve bilgilerini gir: fakeapple-giveaway.com'\nNe yaparsın?",
+    options: [
+        { text: "Harika! Hemen tıklayıp bilgilerimi giriyorum", correct: false },
+        { text: "Bu sahte görünüyor, gerçek marka hesabını kontrol ederim", correct: true },
+        { text: "Linki arkadaşlarıma da gönderiyorum, onlar da kazanabilir", correct: false }
+    ],
+    explanation: "Sahte hediye çekilişleri çok yaygın! Gerçek markalar resmi hesaplarından açıklama yapar. Domain adına dikkat et, sahte siteler farklı uzantı kullanır."
+}
     ];
     
     let currentPhishingQuestion = 0;
