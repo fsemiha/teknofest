@@ -1086,7 +1086,16 @@
              const shareResults = document.getElementById('share-results');
              const shareSubmitBtn = document.getElementById('continue-to-phishing-btn');
              
-             if (shareContainer) shareContainer.innerHTML = '';
+             if (shareContainer) {
+                 // Mevcut soruların pointer-events'lerini sıfırla
+                 const existingQuestions = shareContainer.querySelectorAll('.share-question-item');
+                 existingQuestions.forEach(q => {
+                     q.style.pointerEvents = 'auto';
+                     q.style.opacity = '1';
+                     q.classList.remove('selected', 'correct', 'wrong');
+                 });
+                 shareContainer.innerHTML = '';
+             }
              if (shareResults) {
                  shareResults.style.display = 'none';
                  shareResults.innerHTML = '';
@@ -2010,6 +2019,11 @@
             questionDiv.textContent = question.text;
             questionDiv.setAttribute('data-index', index);
             
+            // Başlangıçta tüm butonları aktif hale getir
+            questionDiv.style.pointerEvents = 'auto';
+            questionDiv.style.opacity = '1';
+            questionDiv.classList.remove('selected', 'correct', 'wrong');
+            
             // Tablet için touchstart olayı ekle
             questionDiv.addEventListener('touchstart', function(e) {
                 e.preventDefault(); // Varsayılan dokunma davranışını engelle
@@ -2042,36 +2056,37 @@
     }
     
     function toggleQuestionSelection(index, element) {
-        if (selectedAnswers[index]) {
-            // Seçimi kaldır
-            delete selectedAnswers[index];
-            element.classList.remove('selected', 'correct', 'wrong');
-            
-            // Açıklamayı temizle
-            clearExplanation();
+        // Eğer bu soru zaten cevaplanmışsa, tekrar tıklamaya izin verme
+        if (selectedAnswers[index] !== undefined) {
+            console.log("⚠️ Bu soru zaten cevaplanmış, tekrar tıklama yapılamaz!");
+            return;
+        }
+        
+        // Seçim yap (artık sadece bir kez yapılabilir)
+        selectedAnswers[index] = true;
+        element.classList.add('selected');
+        
+        // Butonu devre dışı bırak
+        element.style.pointerEvents = 'none';
+        element.style.opacity = '0.8';
+        
+        // Hemen kontrol et - doğru mu yanlış mı?
+        const question = shareQuestions[index];
+        const shouldBeSelected = question.shareable === true;
+        
+        if (shouldBeSelected) {
+            // Doğru seçim - PUAN ARTTIR ve SES ÇAL!
+            element.classList.add('correct');
+            shareScore += 30;
+            addScore(30);
+            playSuccessSound();
         } else {
-            // Seçim yap
-            selectedAnswers[index] = true;
-            element.classList.add('selected');
-            
-            // Hemen kontrol et - doğru mu yanlış mı?
-            const question = shareQuestions[index];
-            const shouldBeSelected = question.shareable === true;
-            
-            if (shouldBeSelected) {
-                // Doğru seçim - PUAN ARTTIR ve SES ÇAL!
-                element.classList.add('correct');
-                shareScore += 30;
-                addScore(30);
-                playSuccessSound();
-            } else {
-                // Yanlış seçim - PUAN DÜŞÜR, SES ÇAL ve açıklama göster!
-                element.classList.add('wrong');
-                shareScore -= 15; // Yanlış cevap için puan düşür
-                addScore(-15);
-                playBuzzerSound();
-                showExplanation(question.explanation, false);
-            }
+            // Yanlış seçim - PUAN DÜŞÜR, SES ÇAL ve açıklama göster!
+            element.classList.add('wrong');
+            shareScore -= 15; // Yanlış cevap için puan düşür
+            addScore(-15);
+            playBuzzerSound();
+            showExplanation(question.explanation, false);
         }
         
         // Submit butonunu al
