@@ -790,6 +790,10 @@
                             console.log("📥 Skor yanıtı alındı:", data?.length || 0);
                             mergeNetworkScores(data);
                             break;
+                        case 'CLEAR_SCORES':
+                            console.log("🗑️ Skorları temizle mesajı alındı");
+                            handleClearScoresFromNetwork(data);
+                            break;
                         case 'DEVICE_PING':
                             console.log("📱 Scoreboard cihaz ping alındı:", data.deviceId, "Skor sayısı:", data.scoreCount);
                             // Ping alan cihazdan skorları talep et
@@ -899,6 +903,21 @@
                 console.log("🔄 Ağ skorları birleştiriliyor:", networkScores.length);
                 handleNetworkScoreUpdate(networkScores);
             }
+        }
+
+        // Ağdan gelen temizleme mesajını işle
+        function handleClearScoresFromNetwork(data) {
+            console.log("🗑️ Ağdan skorları temizle mesajı alındı:", data);
+            
+            // Kendi localStorage'ımızı da temizle
+            localStorage.removeItem('cyberScores');
+            localStorage.setItem('cyberScores', '[]');
+            
+            // Scoreboard'u güncelle
+            setTimeout(() => {
+                loadScoreboard();
+                showTemporaryMessage('🗑️ Skorlar ağdan temizlendi');
+            }, 500);
         }
 
         // Yeni tek skor işle (anında güncelleme için)
@@ -1072,9 +1091,10 @@
             
             const parsedScores = scores ? JSON.parse(scores) : [];
             
-            // Eğer hiç skor yoksa, demo skorları ekle
-            if (parsedScores.length === 0) {
-                console.log("🎮 Demo skorları ekleniyor...");
+            // Eğer localStorage null ise ve hiç skor yoksa, demo skorları ekle
+            // Ama eğer localStorage boş array ([]) ise demo ekleme (temizlenmiş demektir)
+            if (scores === null && parsedScores.length === 0) {
+                console.log("🎮 İlk defa açılıyor - Demo skorları ekleniyor...");
                 const demoScores = [
                     {
                         username: "Demo Oyuncu 1",
@@ -1106,8 +1126,12 @@
                 localStorage.setItem('cyberScores', JSON.stringify(demoScores));
                 console.log("✅ Demo skorları eklendi:", demoScores.length);
                 return demoScores;
+            } else if (scores === '[]') {
+                console.log("🗑️ Skorlar temizlenmiş durumda - demo eklenmeyecek");
+                return [];
             }
             
+            console.log("📊 Mevcut skorlar döndürülüyor:", parsedScores.length);
             return parsedScores;
         }
         
@@ -1304,31 +1328,64 @@
 
         function clearScoreboard() {
             if (confirm('Tüm skorları temizlemek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+                console.log("🗑️ Skor tablosu temizleme başlatılıyor...");
+                
                 if (isFirebaseEnabled) {
                     // Firebase'den tüm skorları sil
                     const scoresRef = database.ref('scores');
                     scoresRef.remove().then(() => {
-                        console.log("Firebase skorları temizlendi");
+                        console.log("✅ Firebase skorları temizlendi");
+                        
+                        // LocalStorage'ı da temizle
+                        localStorage.removeItem('cyberScores');
+                        console.log("✅ LocalStorage skorları temizlendi");
+                        
+                        // Demo skorları tekrar eklenmesini engelle
+                        localStorage.setItem('cyberScores', '[]');
+                        
+                        // Ağa temizleme mesajı gönder
+                        if (localNetworkChannel) {
+                            localNetworkChannel.postMessage({
+                                type: 'CLEAR_SCORES',
+                                data: { timestamp: Date.now() }
+                            });
+                        }
+                        
                         currentPage = 1;
                         loadScoreboard();
                         updateLastUpdateTime();
-                        alert('Skor tablosu başarıyla temizlendi! (Firebase)');
+                        showTemporaryMessage('✅ Skor tablosu başarıyla temizlendi! (Firebase + Yerel)');
                     }).catch((error) => {
-                        console.error("Firebase skorları temizlenirken hata:", error);
-                        alert('Firebase skorları temizlenirken hata oluştu. Yerel skorlar temizlendi.');
+                        console.error("❌ Firebase skorları temizlenirken hata:", error);
+                        
                         // Hata durumunda sadece yerel skorları temizle
                         localStorage.removeItem('cyberScores');
+                        localStorage.setItem('cyberScores', '[]');
+                        
                         currentPage = 1;
                         loadScoreboard();
                         updateLastUpdateTime();
+                        showTemporaryMessage('⚠️ Firebase hatası - Sadece yerel skorlar temizlendi');
                     });
                 } else {
                     // Sadece yerel skorları temizle
                     localStorage.removeItem('cyberScores');
+                    localStorage.setItem('cyberScores', '[]');
+                    console.log("✅ Yerel skorlar temizlendi");
+                    
+                    // Ağa temizleme mesajı gönder
+                    if (localNetworkChannel) {
+                        localNetworkChannel.postMessage({
+                            type: 'CLEAR_SCORES',
+                            data: { timestamp: Date.now() }
+                        });
+                        console.log("📡 Ağa temizleme mesajı gönderildi");
+                    }
+                    
                     currentPage = 1;
                     loadScoreboard();
                     updateLastUpdateTime();
-                    alert('Skor tablosu başarıyla temizlendi! (Yerel)');
+                    showTemporaryMessage('✅ Skor tablosu başarıyla temizlendi! (Yerel)');
                 }
             }
         }

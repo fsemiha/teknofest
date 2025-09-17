@@ -376,6 +376,10 @@
                             console.log("📥 Skor yanıtı alındı:", data?.length || 0);
                             handleNetworkScoreUpdate(data);
                             break;
+                        case 'CLEAR_SCORES':
+                            console.log("🗑️ Skorları temizle mesajı alındı");
+                            handleClearScoresFromNetwork(data);
+                            break;
                         case 'DEVICE_PING':
                             console.log("📱 Cihaz ping alındı:", data.deviceId, "Skor sayısı:", data.scoreCount);
                             // Ping gelen cihazdan skorları talep et
@@ -505,7 +509,20 @@
                 });
                 console.log("✅ Skorlar ağa gönderildi:", localScores.length);
             }
-        }    // Custom password analysis functions
+        }
+
+        // Ağdan gelen temizleme mesajını işle
+        function handleClearScoresFromNetwork(data) {
+            console.log("🗑️ Oyun ekranında ağdan skorları temizle mesajı alındı:", data);
+            
+            // Kendi localStorage'ımızı da temizle
+            localStorage.removeItem('cyberScores');
+            localStorage.setItem('cyberScores', '[]');
+            
+            console.log("✅ Oyun ekranında skorlar temizlendi");
+        }
+
+    // Custom password analysis functions
     function analyzePassword(password) {
     let charsetSize = 0;
     let usedSets = [];
@@ -816,9 +833,10 @@
         const scores = localStorage.getItem('cyberScores');
         const parsedScores = scores ? JSON.parse(scores) : [];
         
-        // Eğer hiç skor yoksa, demo skorları ekle
-        if (parsedScores.length === 0) {
-            console.log("🎮 Demo skorları ekleniyor...");
+        // Eğer localStorage null ise ve hiç skor yoksa, demo skorları ekle
+        // Ama eğer localStorage boş array ([]) ise demo ekleme (temizlenmiş demektir)
+        if (scores === null && parsedScores.length === 0) {
+            console.log("🎮 İlk defa açılıyor - Demo skorları ekleniyor...");
             const demoScores = [
                 {
                     username: "Demo Oyuncu 1",
@@ -850,8 +868,12 @@
             localStorage.setItem('cyberScores', JSON.stringify(demoScores));
             console.log("✅ Demo skorları eklendi:", demoScores.length);
             return demoScores;
+        } else if (scores === '[]') {
+            console.log("🗑️ Skorlar temizlenmiş durumda - demo eklenmeyecek");
+            return [];
         }
         
+        console.log("📊 Mevcut skorlar döndürülüyor:", parsedScores.length);
         return parsedScores;
     }
     
