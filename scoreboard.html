@@ -150,6 +150,14 @@
             font-weight: 500;
             text-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
+        
+        /* Geçici mesaj animasyonu */
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-20px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
 
         .refresh-btn {
             position: absolute;
@@ -662,6 +670,9 @@
                     <!-- Temizle butonu -->
                     <img src="assets/Asset 3.svg" alt="Temizle" id="clear-scoreboard-btn" class="clear-btn" onclick="clearScoreboard()">
                     
+                    <!-- Debug: Manual skor talebi butonu (sadece debug modda) -->
+                    <img src="assets/Asset 3.svg" alt="Skor Talep Et" id="request-scores-btn" class="clear-btn" onclick="requestScoresManually()" style="display: none; margin-left: 10px;">
+                    
                     <img src="assets/Asset 25.svg" alt="Skor Tablosu İkonu" class="security-icon" style="width: 60px; height: 60px;">
                     <div class="password-title">SİBER GÜVENLİK SKOR TABLOSU</div>
                     <div class="password-desc" style="margin-bottom: 20px;">En iyi siber kahramanları keşfedin!</div>
@@ -758,45 +769,55 @@
                 
                 localNetworkChannel.onmessage = (event) => {
                     const { type, data } = event.data;
-                    console.log("📡 Scoreboard ağ mesajı alındı:", type);
+                    console.log("📡 Scoreboard ağ mesajı alındı:", type, data);
                     
                     switch (type) {
                         case 'SCORE_UPDATE':
+                            console.log("📊 Skor güncellemesi alındı:", data?.length || 0);
                             handleNetworkScoreUpdate(data);
+                            // Scoreboard'u anında güncelle
+                            setTimeout(() => loadScoreboard(), 500);
                             break;
                         case 'NEW_SCORE':
+                            console.log("⚡ Yeni skor alındı:", data?.username, data?.score);
                             handleNewNetworkScore(data);
                             break;
                         case 'REQUEST_SCORES':
+                            console.log("📤 Skor talebi alındı, skorlar gönderiliyor");
                             sendLocalScores();
                             break;
                         case 'SCORES_RESPONSE':
+                            console.log("📥 Skor yanıtı alındı:", data?.length || 0);
                             mergeNetworkScores(data);
                             break;
                         case 'DEVICE_PING':
-                            console.log("📱 Scoreboard cihaz ping alındı:", data.deviceId);
+                            console.log("📱 Scoreboard cihaz ping alındı:", data.deviceId, "Skor sayısı:", data.scoreCount);
+                            // Ping alan cihazdan skorları talep et
+                            if (data.scoreCount > 0) {
+                                localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
+                            }
                             break;
                     }
                 };
                 
-                // Diğer cihazlardan skorları talep et
-                localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
-                
-                // Periyodik skorboard güncellemesi ve senkronizasyon
-                setInterval(() => {
-                    // Skorları talep et
+                // Sayfa yüklendiğinde skorları talep et
+                setTimeout(() => {
                     localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
-                    
-                    // Kendi skorlarını paylaş
+                    console.log("🚀 İlk skor talebi gönderildi");
+                }, 1000);
+                
+                // Kısa aralıklarla skorları talep et ve paylaş
+                setInterval(() => {
+                    localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
                     sendLocalScores();
-                    
-                    // Skorboard'u güncelle
-                    setTimeout(() => {
-                        loadScoreboard();
-                    }, 1000);
-                    
-                    console.log("🔄 Periyodik scoreboard senkronizasyonu tamamlandı");
-                }, 8000); // 8 saniyede bir güncelle
+                    console.log("🔄 Periyodik skor senkronizasyonu");
+                }, 5000); // 5 saniyede bir
+                
+                // Scoreboard'u periyodik güncelle
+                setInterval(() => {
+                    loadScoreboard();
+                    console.log("🎯 Scoreboard otomatik yenilendi");
+                }, 10000); // 10 saniyede bir scoreboard yenile
                 
                 console.log("✅ Scoreboard yerel ağ senkronizasyonu aktif - Tabletler arası skor görüntüleme");
                 showFirebaseStatus("🏠 Yerel ağ - Tabletler arası senkronizasyon", "#00ff99");
@@ -808,10 +829,18 @@
 
         // Ağdan gelen skor güncellemesini işle
         function handleNetworkScoreUpdate(newScores) {
-            console.log("📊 Ağdan skor güncellemesi alındı:", newScores.length);
+            if (!newScores || newScores.length === 0) {
+                console.log("📊 Boş skor güncellemesi alındı");
+                return;
+            }
             
-            // Mevcut yerel skorları al
-            const localScores = getLocalScores();
+            console.log("📊 Ağdan skor güncellemesi alındı:", newScores.length, newScores);
+            
+            // Mevcut yerel skorları al (demo skorları hariç)
+            let localScores = getLocalScores();
+            
+            // Demo skorları kaldır (gerçek skorlar geldiğinde)
+            localScores = localScores.filter(score => !score.deviceId.includes('demo_device'));
             
             // Yeni skorları ekle
             const allScores = [...localScores, ...newScores];
@@ -834,22 +863,33 @@
             // localStorage'a kaydet
             localStorage.setItem('cyberScores', JSON.stringify(uniqueScores));
             
+            console.log("✅ Skorlar güncellendi, toplam:", uniqueScores.length);
+            
             // Skorları yeniden yükle
-            loadScoreboard();
-            updateLastUpdateTime();
+            setTimeout(() => {
+                loadScoreboard();
+                updateLastUpdateTime();
+            }, 200);
         }
 
         // Yerel skorları ağa gönder
         function sendLocalScores() {
-            if (!localNetworkChannel) return;
+            if (!localNetworkChannel) {
+                console.log("❌ LocalNetworkChannel mevcut değil");
+                return;
+            }
             
             const localScores = getLocalScores();
+            console.log("📤 Yerel skorlar gönderiliyor:", localScores.length);
+            
             if (localScores.length > 0) {
                 localNetworkChannel.postMessage({
                     type: 'SCORES_RESPONSE',
                     data: localScores
                 });
-                console.log("📤 Yerel skorlar ağa gönderildi:", localScores.length);
+                console.log("✅ Skorlar ağa gönderildi:", localScores.length);
+            } else {
+                console.log("📝 Gönderilecek skor yok");
             }
         }
 
@@ -952,8 +992,20 @@
             // Ağdan skorları talep et
             if (localNetworkChannel) {
                 localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
+                console.log("📡 Ağdan skorlar talep edildi");
             }
             
+            // LocalStorage skorlarını sırala ve döndür
+            localScores.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                const timeA = convertTimeToSeconds(a.time);
+                const timeB = convertTimeToSeconds(b.time);
+                return timeA - timeB;
+            });
+            
+            console.log("📊 Döndürülen skor sayısı:", localScores.length);
             return localScores;
         }
         
@@ -1017,7 +1069,46 @@
                 parsedData: scores ? JSON.parse(scores) : [],
                 count: scores ? JSON.parse(scores).length : 0
             });
-            return scores ? JSON.parse(scores) : [];
+            
+            const parsedScores = scores ? JSON.parse(scores) : [];
+            
+            // Eğer hiç skor yoksa, demo skorları ekle
+            if (parsedScores.length === 0) {
+                console.log("🎮 Demo skorları ekleniyor...");
+                const demoScores = [
+                    {
+                        username: "Demo Oyuncu 1",
+                        score: 850,
+                        time: "2:15",
+                        date: new Date().toLocaleDateString('tr-TR'),
+                        timestamp: Date.now() - 300000,
+                        deviceId: "demo_device_1"
+                    },
+                    {
+                        username: "Demo Oyuncu 2", 
+                        score: 720,
+                        time: "3:42",
+                        date: new Date().toLocaleDateString('tr-TR'),
+                        timestamp: Date.now() - 200000,
+                        deviceId: "demo_device_2"
+                    },
+                    {
+                        username: "Demo Oyuncu 3",
+                        score: 650,
+                        time: "4:18",
+                        date: new Date().toLocaleDateString('tr-TR'),
+                        timestamp: Date.now() - 100000,
+                        deviceId: "demo_device_3"
+                    }
+                ];
+                
+                // Demo skorları localStorage'a kaydet
+                localStorage.setItem('cyberScores', JSON.stringify(demoScores));
+                console.log("✅ Demo skorları eklendi:", demoScores.length);
+                return demoScores;
+            }
+            
+            return parsedScores;
         }
         
         function convertTimeToSeconds(timeString) {
@@ -1042,15 +1133,29 @@
             getScores().then(scores => {
                 console.log("✅ Skorlar alındı:", {
                     count: scores.length,
-                    sample: scores.slice(0, 3)
+                    sample: scores.slice(0, 3),
+                    isFirebaseEnabled: isFirebaseEnabled
                 });
                 
                 totalScores = scores;
                 
+                // Debug: localStorage skorlarını da kontrol et
+                const localScores = getLocalScores();
+                console.log("📱 LocalStorage skorları:", {
+                    count: localScores.length,
+                    data: localScores.slice(0, 2)
+                });
+                
+                // Eğer Firebase skorları boşsa ve yerel skorlar varsa, yerel skorları kullan
+                if (totalScores.length === 0 && localScores.length > 0) {
+                    console.log("🔄 Firebase boş, yerel skorlar kullanılıyor");
+                    totalScores = localScores;
+                }
+                
                 if (totalScores.length === 0) {
                     const emptyMessage = isFirebaseEnabled ? 
-                        '<div style="text-align: center; color: #cccccc; padding: 20px;">🎮 Henüz kimse oynamadı!<br><small>İlk skor için oyunu oynayın.</small></div>' :
-                        '<div style="text-align: center; color: #cccccc; padding: 20px;">📱 Yerel mod aktif<br><small>Bu cihazda henüz kayıtlı skor yok.</small></div>';
+                        '<div style="text-align: center; color: #cccccc; padding: 20px;">🎮 Henüz kimse oynamadı!<br><small>İlk skor için oyunu oynayın.</small><br><br>🔍 Debug: Firebase bağlı ama veri yok</div>' :
+                        '<div style="text-align: center; color: #cccccc; padding: 20px;">📱 Yerel ağ modu aktif<br><small>Bu ağda henüz kayıtlı skor yok.</small><br><br>💡 Test skoru eklemek için <a href="tablet-test.html" target="_blank" style="color: #00ff99;">tablet-test.html</a> sayfasını kullanın</div>';
                     scoreboardList.innerHTML = emptyMessage;
                     paginationControls.style.display = 'none';
                     return;
@@ -1426,7 +1531,45 @@
 
         // Debug butonları ekleme (URL'de #debug varsa)
         function addDebugButtons() {
-            if (!window.location.hash.includes('debug')) return;
+            if (window.location.hash.includes('debug')) {
+                console.log("🔧 Debug modu aktif - Extra butonlar gösteriliyor");
+                
+                // Manuel skor talebi butonunu göster
+                const requestBtn = document.getElementById('request-scores-btn');
+                if (requestBtn) {
+                    requestBtn.style.display = 'inline-block';
+                }
+                
+                // Debug panel oluştur
+                const debugPanel = document.createElement('div');
+                debugPanel.style.cssText = `
+                    position: fixed;
+                    top: 10px;
+                    left: 10px;
+                    z-index: 9999;
+                    background: rgba(0,0,0,0.9);
+                    padding: 15px;
+                    border-radius: 8px;
+                    color: white;
+                    font-family: Arial, sans-serif;
+                    font-size: 12px;
+                    border: 2px solid #00ff99;
+                `;
+                
+                debugPanel.innerHTML = `
+                    <div style="margin-bottom: 10px; font-weight: bold; color: #00ff99;">🔧 DEBUG PANEL</div>
+                    <button onclick="requestScoresManually()" style="margin: 2px; padding: 5px 10px; font-size: 11px;">📡 Skor Talep Et</button>
+                    <button onclick="loadScoreboard()" style="margin: 2px; padding: 5px 10px; font-size: 11px;">🔄 Yenile</button>
+                    <button onclick="clearScoreboard()" style="margin: 2px; padding: 5px 10px; font-size: 11px;">🗑️ Temizle</button>
+                    <br>
+                    <button onclick="console.log('LocalStorage:', getLocalScores())" style="margin: 2px; padding: 5px 10px; font-size: 11px;">📋 Log Skorlar</button>
+                    <button onclick="window.open('tablet-test.html', '_blank')" style="margin: 2px; padding: 5px 10px; font-size: 11px;">🧪 Test</button>
+                `;
+                
+                document.body.appendChild(debugPanel);
+            }
+            
+            return;
             
             console.log("🔧 Debug butonları ekleniyor...");
             
@@ -1480,6 +1623,51 @@
                 database: database ? "Mevcut" : "Null"
             });
             
+        // Manuel skor talebi
+        function requestScoresManually() {
+            console.log("🔄 Manuel skor talebi başlatılıyor...");
+            
+            if (localNetworkChannel) {
+                localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
+                console.log("📡 Manuel skor talebi gönderildi");
+                
+                // 2 saniye sonra scoreboard'u güncelle
+                setTimeout(() => {
+                    loadScoreboard();
+                    console.log("🔄 Manuel scoreboard güncellendi");
+                }, 2000);
+                
+                // Başarı mesajı göster
+                showTemporaryMessage("📡 Skor talebi gönderildi!");
+            } else {
+                console.log("❌ LocalNetworkChannel mevcut değil");
+                showTemporaryMessage("❌ Yerel ağ bağlantısı yok!");
+            }
+        }
+        
+        // Geçici mesaj göster
+        function showTemporaryMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(0,255,153,0.9);
+                color: #000;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-weight: bold;
+                z-index: 10000;
+                animation: fadeInOut 3s ease;
+            `;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
             // Debug butonları ekle (eğer URL'de #debug varsa)
             addDebugButtons();
             

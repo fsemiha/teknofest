@@ -360,7 +360,7 @@
                 
                 localNetworkChannel.onmessage = (event) => {
                     const { type, data } = event.data;
-                    console.log("📡 Yerel ağ mesajı alındı:", type);
+                    console.log("📡 Yerel ağ mesajı alındı:", type, data);
                     
                     switch (type) {
                         case 'SCORE_UPDATE':
@@ -369,19 +369,30 @@
                         case 'REQUEST_SCORES':
                             sendLocalScores();
                             break;
-                        case 'DEVICE_PING':
-                            console.log("📱 Cihaz ping alındı:", data.deviceId);
-                            break;
                         case 'NEW_SCORE':
                             handleNewNetworkScore(data);
+                            break;
+                        case 'SCORES_RESPONSE':
+                            console.log("📥 Skor yanıtı alındı:", data?.length || 0);
+                            handleNetworkScoreUpdate(data);
+                            break;
+                        case 'DEVICE_PING':
+                            console.log("📱 Cihaz ping alındı:", data.deviceId, "Skor sayısı:", data.scoreCount);
+                            // Ping gelen cihazdan skorları talep et
+                            if (data.scoreCount > 0) {
+                                localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
+                            }
                             break;
                     }
                 };
                 
-                // Diğer cihazlardan skorları talep et
-                localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
+                // Sayfa yüklendiğinde skorları talep et
+                setTimeout(() => {
+                    localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
+                    console.log("🚀 İlk skor talebi gönderildi");
+                }, 1000);
                 
-                // Periyodik olarak ping gönder ve skorları senkronize et
+                // Kısa aralıklarla skorları talep et ve paylaş
                 setInterval(() => {
                     localNetworkChannel.postMessage({
                         type: 'DEVICE_PING',
@@ -393,10 +404,8 @@
                         }
                     });
                     
-                    // Her 30 saniyede skorları senkronize et
-                    if (Date.now() % 30000 < 5000) {
-                        localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
-                    }
+                    // Skorları da talep et
+                    localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
                 }, 5000); // 5 saniyede bir
                 
                 console.log("✅ Yerel ağ senkronizasyonu aktif - Tabletler arası skor paylaşımı çalışıyor");
@@ -487,12 +496,14 @@
             if (!localNetworkChannel) return;
             
             const localScores = getLocalScores();
+            console.log("📤 Yerel skorlar gönderiliyor:", localScores.length);
+            
             if (localScores.length > 0) {
                 localNetworkChannel.postMessage({
-                    type: 'SCORE_UPDATE',
+                    type: 'SCORES_RESPONSE',
                     data: localScores
                 });
-                console.log("📤 Yerel skorlar ağa gönderildi:", localScores.length);
+                console.log("✅ Skorlar ağa gönderildi:", localScores.length);
             }
         }    // Custom password analysis functions
     function analyzePassword(password) {
@@ -803,7 +814,45 @@
     
     function getLocalScores() {
         const scores = localStorage.getItem('cyberScores');
-        return scores ? JSON.parse(scores) : [];
+        const parsedScores = scores ? JSON.parse(scores) : [];
+        
+        // Eğer hiç skor yoksa, demo skorları ekle
+        if (parsedScores.length === 0) {
+            console.log("🎮 Demo skorları ekleniyor...");
+            const demoScores = [
+                {
+                    username: "Demo Oyuncu 1",
+                    score: 850,
+                    time: "2:15",
+                    date: new Date().toLocaleDateString('tr-TR'),
+                    timestamp: Date.now() - 300000,
+                    deviceId: "demo_device_1"
+                },
+                {
+                    username: "Demo Oyuncu 2", 
+                    score: 720,
+                    time: "3:42",
+                    date: new Date().toLocaleDateString('tr-TR'),
+                    timestamp: Date.now() - 200000,
+                    deviceId: "demo_device_2"
+                },
+                {
+                    username: "Demo Oyuncu 3",
+                    score: 650,
+                    time: "4:18",
+                    date: new Date().toLocaleDateString('tr-TR'),
+                    timestamp: Date.now() - 100000,
+                    deviceId: "demo_device_3"
+                }
+            ];
+            
+            // Demo skorları localStorage'a kaydet
+            localStorage.setItem('cyberScores', JSON.stringify(demoScores));
+            console.log("✅ Demo skorları eklendi:", demoScores.length);
+            return demoScores;
+        }
+        
+        return parsedScores;
     }
     
     // Her cihaz için benzersiz ID oluştur
