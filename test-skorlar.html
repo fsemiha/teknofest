@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skor Test Sayfası</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .section {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .danger {
+            background: #dc3545;
+        }
+        .danger:hover {
+            background: #c82333;
+        }
+        .success {
+            background: #28a745;
+        }
+        .success:hover {
+            background: #218838;
+        }
+        .info {
+            background: #6c757d;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .score-list {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Skor Sistemi Test Sayfası</h1>
+        
+        <div class="section">
+            <h2>📊 Durum Bilgileri</h2>
+            <div class="info" id="status-info">
+                Yükleniyor...
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧪 Test İşlemleri</h2>
+            <button onclick="addTestScore()">💾 Test Skoru Ekle</button>
+            <button onclick="loadScores()" class="success">🔄 Skorları Yükle</button>
+            <button onclick="clearScores()" class="danger">🗑️ Skorları Temizle</button>
+        </div>
+
+        <div class="section">
+            <h2>📋 LocalStorage Skorları</h2>
+            <div class="score-list" id="local-scores">
+                Skorlar yükleniyor...
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔥 Firebase Skorları</h2>
+            <div class="info">
+                <strong>Not:</strong> Firebase bağlantısı için Firebase projesinin aktif olması gerekir.
+            </div>
+            <button onclick="addFirebaseTestScore()" class="success">🔥 Firebase Test Skoru</button>
+            <div class="score-list" id="firebase-scores">
+                Firebase skorları yükleniyor...
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Hızlı Linkler</h2>
+            <button onclick="openGame()">🎮 Oyunu Aç</button>
+            <button onclick="openScoreboard()">📊 Skor Tablosu</button>
+            <button onclick="openScoreboardDebug()">🔧 Debug Skor Tablosu</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB3ofVngr1rY6Zr2bTSE3PRFT1z104nMXo",
+            authDomain: "teknofest-c7a92.firebaseapp.com",
+            databaseURL: "https://teknofest-c7a92-default-rtdb.firebaseio.com",
+            projectId: "teknofest-c7a92",
+            storageBucket: "teknofest-c7a92.firebasestorage.app",
+            messagingSenderId: "478655816162",
+            appId: "1:478655816162:web:0cb7626d34935611ed59bb",
+            measurementId: "G-PG8ZFFEWJP"
+        };
+
+        let database = null;
+        let isFirebaseEnabled = false;
+
+        // Firebase'i başlat
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            isFirebaseEnabled = true;
+            console.log("✅ Firebase başarıyla bağlandı");
+        } catch (error) {
+            console.warn("❌ Firebase bağlantısı başarısız:", error);
+            isFirebaseEnabled = false;
+        }
+
+        // Zaman dönüştürme fonksiyonu
+        function convertTimeToSeconds(timeString) {
+            if (!timeString || typeof timeString !== 'string') return 999999;
+            const parts = timeString.split(':');
+            if (parts.length !== 2) return 999999;
+            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
+
+        // Device ID oluştur
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+
+        // Test skoru ekle
+        function addTestScore() {
+            const testScore = {
+                username: 'Test Kullanıcı ' + Math.floor(Math.random() * 1000),
+                score: Math.floor(Math.random() * 1000),
+                time: Math.floor(Math.random() * 5) + ':' + Math.floor(Math.random() * 60).toString().padStart(2, '0'),
+                date: new Date().toLocaleDateString('tr-TR'),
+                timestamp: Date.now(),
+                deviceId: getDeviceId()
+            };
+
+            // LocalStorage'a ekle
+            const scores = JSON.parse(localStorage.getItem('cyberScores') || '[]');
+            scores.push(testScore);
+            scores.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                const timeA = convertTimeToSeconds(a.time);
+                const timeB = convertTimeToSeconds(b.time);
+                return timeA - timeB;
+            });
+            localStorage.setItem('cyberScores', JSON.stringify(scores));
+
+            console.log("✅ Test skoru eklendi:", testScore);
+            loadScores();
+        }
+
+        // Firebase test skoru ekle
+        function addFirebaseTestScore() {
+            if (!isFirebaseEnabled) {
+                alert("❌ Firebase bağlantısı yok!");
+                return;
+            }
+
+            const testScore = {
+                username: 'Firebase Test ' + Math.floor(Math.random() * 1000),
+                score: Math.floor(Math.random() * 1000),
+                time: Math.floor(Math.random() * 5) + ':' + Math.floor(Math.random() * 60).toString().padStart(2, '0'),
+                date: new Date().toLocaleDateString('tr-TR'),
+                timestamp: Date.now(),
+                deviceId: getDeviceId()
+            };
+
+            database.ref('scores').push(testScore).then(() => {
+                console.log("✅ Firebase test skoru eklendi:", testScore);
+                loadFirebaseScores();
+            }).catch(error => {
+                console.error("❌ Firebase test skoru eklenemedi:", error);
+                alert("❌ Firebase'e skor eklenemedi: " + error.message);
+            });
+        }
+
+        // Skorları yükle
+        function loadScores() {
+            // LocalStorage skorları
+            const localScores = JSON.parse(localStorage.getItem('cyberScores') || '[]');
+            const localScoresDiv = document.getElementById('local-scores');
+            
+            if (localScores.length === 0) {
+                localScoresDiv.innerHTML = '<div style="color: #888;">Henüz yerel skor yok.</div>';
+            } else {
+                localScoresDiv.innerHTML = localScores.slice(0, 10).map((score, index) => `
+                    <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                        <strong>${index + 1}. ${score.username}</strong><br>
+                        Puan: ${score.score} | Süre: ${score.time} | Tarih: ${score.date}
+                    </div>
+                `).join('');
+            }
+
+            // Firebase skorları
+            loadFirebaseScores();
+
+            // Durum bilgileri
+            updateStatusInfo();
+        }
+
+        // Firebase skorları yükle
+        function loadFirebaseScores() {
+            const firebaseScoresDiv = document.getElementById('firebase-scores');
+            
+            if (!isFirebaseEnabled) {
+                firebaseScoresDiv.innerHTML = '<div style="color: #888;">Firebase bağlantısı yok.</div>';
+                return;
+            }
+
+            database.ref('scores').limitToLast(10).once('value', (snapshot) => {
+                const scores = [];
+                snapshot.forEach((child) => {
+                    scores.push(child.val());
+                });
+
+                scores.sort((a, b) => {
+                    if (b.score !== a.score) {
+                        return b.score - a.score;
+                    }
+                    const timeA = convertTimeToSeconds(a.time);
+                    const timeB = convertTimeToSeconds(b.time);
+                    return timeA - timeB;
+                });
+
+                if (scores.length === 0) {
+                    firebaseScoresDiv.innerHTML = '<div style="color: #888;">Firebase\'de skor yok.</div>';
+                } else {
+                    firebaseScoresDiv.innerHTML = scores.map((score, index) => `
+                        <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                            <strong>${index + 1}. ${score.username}</strong><br>
+                            Puan: ${score.score} | Süre: ${score.time} | Tarih: ${score.date}
+                        </div>
+                    `).join('');
+                }
+            }).catch(error => {
+                firebaseScoresDiv.innerHTML = '<div style="color: #ff6b6b;">❌ Firebase hatası: ' + error.message + '</div>';
+            });
+        }
+
+        // Skorları temizle
+        function clearScores() {
+            if (confirm('Tüm yerel skorları silmek istediğinizden emin misiniz?')) {
+                localStorage.removeItem('cyberScores');
+                loadScores();
+                console.log("🗑️ Yerel skorlar temizlendi");
+            }
+        }
+
+        // Durum bilgilerini güncelle
+        function updateStatusInfo() {
+            const statusDiv = document.getElementById('status-info');
+            const localScoreCount = JSON.parse(localStorage.getItem('cyberScores') || '[]').length;
+            
+            statusDiv.innerHTML = `
+                <strong>🔧 Firebase:</strong> ${isFirebaseEnabled ? '🟢 Bağlı' : '🔴 Bağlı Değil'}<br>
+                <strong>💾 Yerel Skor Sayısı:</strong> ${localScoreCount}<br>
+                <strong>🆔 Device ID:</strong> ${getDeviceId()}<br>
+                <strong>🕒 Son Güncelleme:</strong> ${new Date().toLocaleTimeString('tr-TR')}
+            `;
+        }
+
+        // Hızlı linkler
+        function openGame() {
+            window.open('index.html', '_blank');
+        }
+
+        function openScoreboard() {
+            window.open('scoreboard.html', '_blank');
+        }
+
+        function openScoreboardDebug() {
+            window.open('scoreboard.html#debug', '_blank');
+        }
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            loadScores();
+            
+            // Her 5 saniyede durum güncelle
+            setInterval(updateStatusInfo, 5000);
+        });
+    </script>
+</body>
+</html>

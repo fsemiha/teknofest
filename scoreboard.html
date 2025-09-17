@@ -706,6 +706,7 @@
         // Firebase'i başlat
         let database = null;
         let isFirebaseEnabled = false;
+        let localNetworkChannel = null;
         
         if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyExample...") {
             try {
@@ -729,21 +730,140 @@
                     } else {
                         console.log("⚠️ Skorboard: Firebase bağlantısı kopuk");
                         showFirebaseStatus("⚠️ Bağlantı kopuk", "#ffaa00");
+                        // Firebase kopuksa yerel ağı dene
+                        setupLocalNetworkSync();
                     }
                 });
                 
             } catch (error) {
-                console.warn("❌ Skorboard: Firebase bağlantısı başarısız, yerel mod:", error);
+                console.warn("❌ Skorboard: Firebase bağlantısı başarısız, yerel ağ modu:", error);
                 isFirebaseEnabled = false;
-                showFirebaseStatus("💾 Yerel mod", "#ffaa00");
+                showFirebaseStatus("💾 Yerel ağ modu", "#ffaa00");
+                setupLocalNetworkSync();
             }
         } else {
-            console.warn("⚙️ Skorboard: Firebase konfigürasyonu eksik, yerel mod");
+            console.warn("⚙️ Skorboard: Firebase konfigürasyonu eksik, yerel ağ modu");
             console.log("📋 Çoklu ekran için FIREBASE_KURULUM.md dosyasını okuyun");
             isFirebaseEnabled = false;
-            showFirebaseStatus("⚙️ Firebase kurulum gerekli", "#ff4444");
+            showFirebaseStatus("⚙️ Yerel ağ modu aktif", "#ff4444");
+            setupLocalNetworkSync();
         }
         
+        // Yerel ağ senkronizasyonu kur
+        function setupLocalNetworkSync() {
+            console.log("🏠 Yerel ağ senkronizasyonu başlatılıyor...");
+            
+            if ('BroadcastChannel' in window) {
+                localNetworkChannel = new BroadcastChannel('siber-macera-scores');
+                
+                localNetworkChannel.onmessage = (event) => {
+                    const { type, data } = event.data;
+                    console.log("📡 Yerel ağ mesajı alındı:", type, data);
+                    
+                    switch (type) {
+                        case 'SCORE_UPDATE':
+                            handleNetworkScoreUpdate(data);
+                            break;
+                        case 'REQUEST_SCORES':
+                            sendLocalScores();
+                            break;
+                        case 'SCORES_RESPONSE':
+                            mergeNetworkScores(data);
+                            break;
+                        case 'DEVICE_PING':
+                            console.log("📱 Cihaz ping alındı:", data.deviceId);
+                            break;
+                    }
+                };
+                
+                // Diğer cihazlardan skorları talep et
+                localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
+                
+                // Periyodik olarak ping gönder
+                setInterval(() => {
+                    localNetworkChannel.postMessage({
+                        type: 'DEVICE_PING',
+                        data: { 
+                            deviceId: getDeviceId(), 
+                            timestamp: Date.now(),
+                            page: 'scoreboard'
+                        }
+                    });
+                }, 10000);
+                
+                console.log("✅ Yerel ağ senkronizasyonu aktif");
+                showFirebaseStatus("🏠 Yerel ağ senkronizasyonu aktif", "#00aaff");
+            } else {
+                console.warn("❌ BroadcastChannel desteklenmiyor");
+                showFirebaseStatus("📱 Sadece yerel mod", "#ffaa00");
+            }
+        }
+
+        // Ağdan gelen skor güncellemesini işle
+        function handleNetworkScoreUpdate(newScores) {
+            console.log("📊 Ağdan skor güncellemesi alındı:", newScores.length);
+            
+            // Mevcut yerel skorları al
+            const localScores = getLocalScores();
+            
+            // Yeni skorları ekle
+            const allScores = [...localScores, ...newScores];
+            
+            // Tekrarları temizle (timestamp'e göre)
+            const uniqueScores = allScores.filter((score, index, self) => 
+                index === self.findIndex(s => s.timestamp === score.timestamp)
+            );
+            
+            // Sırala
+            uniqueScores.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                const timeA = convertTimeToSeconds(a.time);
+                const timeB = convertTimeToSeconds(b.time);
+                return timeA - timeB;
+            });
+            
+            // localStorage'a kaydet
+            localStorage.setItem('cyberScores', JSON.stringify(uniqueScores));
+            
+            // Skorları yeniden yükle
+            loadScoreboard();
+            updateLastUpdateTime();
+        }
+
+        // Yerel skorları ağa gönder
+        function sendLocalScores() {
+            if (!localNetworkChannel) return;
+            
+            const localScores = getLocalScores();
+            if (localScores.length > 0) {
+                localNetworkChannel.postMessage({
+                    type: 'SCORES_RESPONSE',
+                    data: localScores
+                });
+                console.log("📤 Yerel skorlar ağa gönderildi:", localScores.length);
+            }
+        }
+
+        // Ağdan gelen skorları birleştir
+        function mergeNetworkScores(networkScores) {
+            if (networkScores && networkScores.length > 0) {
+                console.log("🔄 Ağ skorları birleştiriliyor:", networkScores.length);
+                handleNetworkScoreUpdate(networkScores);
+            }
+        }
+
+        // Device ID oluştur
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+
         // Firebase durumunu ekranda göster (gizli mod)
         function showFirebaseStatus(message, color) {
             // Firebase durumu console'da görünsün ama ekranda görünmesin
@@ -772,8 +892,22 @@
             if (isFirebaseEnabled) {
                 return getScoresFromFirebase();
             } else {
-                return Promise.resolve(getLocalScores());
+                // Firebase yoksa yerel ağdan ve localStorage'dan skorları birleştir
+                return Promise.resolve(getLocalAndNetworkScores());
             }
+        }
+
+        // Yerel ve ağ skorlarını birleştir
+        function getLocalAndNetworkScores() {
+            const localScores = getLocalScores();
+            console.log("📱 Yerel ve ağ skorları birleştiriliyor:", localScores.length);
+            
+            // Ağdan skorları talep et
+            if (localNetworkChannel) {
+                localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
+            }
+            
+            return localScores;
         }
         
         function getScoresFromFirebase() {
@@ -831,6 +965,11 @@
         
         function getLocalScores() {
             const scores = localStorage.getItem('cyberScores');
+            console.log("💾 LocalStorage'dan skorlar alınıyor:", {
+                rawData: scores,
+                parsedData: scores ? JSON.parse(scores) : [],
+                count: scores ? JSON.parse(scores).length : 0
+            });
             return scores ? JSON.parse(scores) : [];
         }
         
@@ -1042,6 +1181,105 @@
             }
         }
 
+        // Test skorları ekleme fonksiyonu (debug amaçlı)
+        function addTestScores() {
+            console.log("🧪 Test skorları localStorage'a ekleniyor...");
+            
+            const testScores = [
+                {
+                    username: 'Test Oyuncu 1',
+                    score: 850,
+                    time: '03:45',
+                    date: new Date().toLocaleDateString('tr-TR'),
+                    timestamp: Date.now() - 1000,
+                    deviceId: 'test_device_1'
+                },
+                {
+                    username: 'Test Oyuncu 2', 
+                    score: 920,
+                    time: '02:30',
+                    date: new Date().toLocaleDateString('tr-TR'),
+                    timestamp: Date.now() - 2000,
+                    deviceId: 'test_device_2'
+                },
+                {
+                    username: 'Test Oyuncu 3',
+                    score: 780,
+                    time: '04:15',
+                    date: new Date().toLocaleDateString('tr-TR'),
+                    timestamp: Date.now() - 3000,
+                    deviceId: 'test_device_3'
+                }
+            ];
+            
+            // Mevcut skorları al
+            const existingScores = getLocalScores();
+            console.log("📋 Mevcut skorlar:", existingScores.length);
+            
+            // Test skorlarını ekle
+            const allScores = [...existingScores, ...testScores];
+            
+            // Sırala: önce puan, sonra süre
+            allScores.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                const timeA = convertTimeToSeconds(a.time);
+                const timeB = convertTimeToSeconds(b.time);
+                return timeA - timeB;
+            });
+            
+            // localStorage'a kaydet
+            localStorage.setItem('cyberScores', JSON.stringify(allScores));
+            
+            console.log("✅ Test skorları eklendi:", allScores.length);
+            
+            // Skorları yeniden yükle
+            loadScoreboardWithUpdate();
+        }
+
+        // Test Firebase skorları ekleme fonksiyonu 
+        function addTestScoresToFirebase() {
+            if (!isFirebaseEnabled) {
+                console.log("❌ Firebase kapalı, test skorları eklenemiyor");
+                return;
+            }
+            
+            console.log("🔥 Test skorları Firebase'e ekleniyor...");
+            
+            const testFirebaseScores = [
+                {
+                    username: 'Firebase Test 1',
+                    score: 999,
+                    time: '01:30',
+                    date: new Date().toLocaleDateString('tr-TR'),
+                    timestamp: Date.now(),
+                    deviceId: 'firebase_test_1'
+                },
+                {
+                    username: 'Firebase Test 2',
+                    score: 875,
+                    time: '02:45',
+                    date: new Date().toLocaleDateString('tr-TR'),
+                    timestamp: Date.now() + 1000,
+                    deviceId: 'firebase_test_2'
+                }
+            ];
+            
+            testFirebaseScores.forEach((score, index) => {
+                setTimeout(() => {
+                    database.ref('scores').push(score).then(() => {
+                        console.log(`✅ Firebase test skoru ${index + 1} eklendi`);
+                        if (index === testFirebaseScores.length - 1) {
+                            setTimeout(() => loadScoreboardWithUpdate(), 1000);
+                        }
+                    }).catch(error => {
+                        console.error(`❌ Firebase test skoru ${index + 1} eklenemedi:`, error);
+                    });
+                }, index * 500);
+            });
+        }
+
         // Firebase durumunu test et ve skor verilerini kontrol et
         function testFirebaseConnection() {
             console.log("🧪 Firebase bağlantısı test ediliyor...");
@@ -1139,6 +1377,54 @@
             }, 500);
         });
 
+        // Debug butonları ekleme (URL'de #debug varsa)
+        function addDebugButtons() {
+            if (!window.location.hash.includes('debug')) return;
+            
+            console.log("🔧 Debug butonları ekleniyor...");
+            
+            const debugPanel = document.createElement('div');
+            debugPanel.style.cssText = `
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                z-index: 9999;
+                background: rgba(0,0,0,0.8);
+                padding: 10px;
+                border-radius: 8px;
+                color: white;
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                max-width: 200px;
+            `;
+            
+            debugPanel.innerHTML = `
+                <div style="font-weight: bold; text-align: center; margin-bottom: 8px;">
+                    🔧 DEBUG PANEL
+                </div>
+                <button onclick="addTestScores()" style="padding: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    💾 LocalStorage Test Ekle
+                </button>
+                <button onclick="addTestScoresToFirebase()" style="padding: 5px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    🔥 Firebase Test Ekle
+                </button>
+                <button onclick="localStorage.removeItem('cyberScores'); loadScoreboardWithUpdate();" style="padding: 5px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    🗑️ LocalStorage Temizle
+                </button>
+                <button onclick="loadScoreboardWithUpdate()" style="padding: 5px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    🔄 Skorları Yenile
+                </button>
+                <div style="font-size: 10px; margin-top: 8px; color: #ccc;">
+                    Firebase: ${isFirebaseEnabled ? '🟢 Aktif' : '🔴 Kapalı'}
+                </div>
+            `;
+            
+            document.body.appendChild(debugPanel);
+        }
+
         // Initial load
         document.addEventListener('DOMContentLoaded', function() {
             console.log("🚀 Scoreboard yükleniyor...");
@@ -1146,6 +1432,9 @@
                 isFirebaseEnabled: isFirebaseEnabled,
                 database: database ? "Mevcut" : "Null"
             });
+            
+            // Debug butonları ekle (eğer URL'de #debug varsa)
+            addDebugButtons();
             
             // Firebase bağlantısını test et
             testFirebaseConnection();

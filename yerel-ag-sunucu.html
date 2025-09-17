@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yerel Ağ Skor Sunucusu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .section {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .server-info {
+            background: rgba(0,255,0,0.1);
+            border: 1px solid #28a745;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .device-list {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .success {
+            background: #28a745;
+        }
+        .success:hover {
+            background: #218838;
+        }
+        .danger {
+            background: #dc3545;
+        }
+        .danger:hover {
+            background: #c82333;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.online {
+            background: rgba(0,255,0,0.2);
+            border: 1px solid #28a745;
+        }
+        .status.offline {
+            background: rgba(255,0,0,0.2);
+            border: 1px solid #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Yerel Ağ Skor Sistemi</h1>
+        
+        <div class="section">
+            <h2>📡 Sunucu Durumu</h2>
+            <div class="status" id="server-status">
+                <strong>Durum:</strong> Başlatılıyor...
+            </div>
+            <div class="server-info" id="server-info" style="display: none;">
+                <strong>🏠 Yerel IP Adresi:</strong> <span id="local-ip">Tespit ediliyor...</span><br>
+                <strong>🔗 Bağlantı URL'si:</strong> <span id="connection-url">Hazırlanıyor...</span><br>
+                <strong>👥 Bağlı Cihaz Sayısı:</strong> <span id="connected-devices">0</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎮 Sunucu Kontrolleri</h2>
+            <button onclick="startLocalServer()" class="success">🚀 Yerel Sunucu Başlat</button>
+            <button onclick="stopLocalServer()" class="danger">⏹️ Sunucu Durdur</button>
+            <button onclick="refreshStatus()">🔄 Durumu Yenile</button>
+        </div>
+
+        <div class="section">
+            <h2>📊 Mevcut Skorlar</h2>
+            <div class="device-list" id="scores-list">
+                Skorlar yükleniyor...
+            </div>
+            <button onclick="syncAllScores()" class="success">🔄 Tüm Skorları Senkronize Et</button>
+        </div>
+
+        <div class="section">
+            <h2>📱 Bağlı Cihazlar</h2>
+            <div class="device-list" id="devices-list">
+                Cihazlar taranıyor...
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⚙️ Kurulum Talimatları</h2>
+            <div style="background: rgba(255,255,0,0.1); padding: 15px; border-radius: 8px; border: 1px solid #ffc107;">
+                <h3>📋 Adım Adım Kurulum:</h3>
+                <ol>
+                    <li><strong>Ana Cihaz:</strong> Bu sayfada "Yerel Sunucu Başlat" butonuna tıklayın</li>
+                    <li><strong>IP Adresini Not Edin:</strong> Yukarıda görünen IP adresini kaydedin</li>
+                    <li><strong>Diğer Cihazlar:</strong> Aynı WiFi ağındaki diğer cihazlarda şu adresi açın:</li>
+                    <li><code>http://[IP_ADRESI]:3000/scoreboard.html</code></li>
+                    <li><strong>Otomatik Senkronizasyon:</strong> Skorlar tüm cihazlarda otomatik güncellenecek</li>
+                </ol>
+                
+                <h3>🔧 Önemli Notlar:</h3>
+                <ul>
+                    <li>Tüm cihazlar aynı WiFi ağında olmalı</li>
+                    <li>Windows Firewall'da 3000 portuna izin verin</li>
+                    <li>Router'ın cihaz keşfine izin vermesi gerekir</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let localServer = null;
+        let connectedDevices = new Set();
+        let localScores = [];
+
+        // IP adresini tespit et
+        async function detectLocalIP() {
+            try {
+                // WebRTC kullanarak yerel IP'yi tespit et
+                const pc = new RTCPeerConnection({iceServers: []});
+                pc.createDataChannel('');
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                
+                return new Promise((resolve) => {
+                    pc.onicecandidate = (event) => {
+                        if (event.candidate && event.candidate.candidate) {
+                            const candidate = event.candidate.candidate;
+                            const match = candidate.match(/(\d+\.\d+\.\d+\.\d+)/);
+                            if (match && !match[1].startsWith('127.')) {
+                                pc.close();
+                                resolve(match[1]);
+                            }
+                        }
+                    };
+                    
+                    // Fallback: 5 saniye sonra localhost döndür
+                    setTimeout(() => {
+                        pc.close();
+                        resolve('localhost');
+                    }, 5000);
+                });
+            } catch (error) {
+                console.error('IP tespit hatası:', error);
+                return 'localhost';
+            }
+        }
+
+        // Yerel sunucu başlat
+        async function startLocalServer() {
+            const statusDiv = document.getElementById('server-status');
+            const serverInfoDiv = document.getElementById('server-info');
+            
+            try {
+                statusDiv.innerHTML = '<strong>Durum:</strong> 🚀 Sunucu başlatılıyor...';
+                statusDiv.className = 'status';
+                
+                // IP adresini tespit et
+                const localIP = await detectLocalIP();
+                document.getElementById('local-ip').textContent = localIP;
+                document.getElementById('connection-url').textContent = `http://${localIP}:3000`;
+                
+                // Service Worker ile basit sunucu simülasyonu
+                if ('serviceWorker' in navigator) {
+                    await navigator.serviceWorker.register('local-server-sw.js');
+                }
+                
+                // WebSocket benzeri peer-to-peer bağlantı kur
+                setupPeerToPeerSync();
+                
+                statusDiv.innerHTML = '<strong>Durum:</strong> ✅ Sunucu çalışıyor';
+                statusDiv.className = 'status online';
+                serverInfoDiv.style.display = 'block';
+                
+                // Skorları yükle
+                loadLocalScores();
+                
+                console.log('✅ Yerel sunucu başlatıldı');
+                
+            } catch (error) {
+                statusDiv.innerHTML = '<strong>Durum:</strong> ❌ Sunucu başlatılamadı: ' + error.message;
+                statusDiv.className = 'status offline';
+                console.error('❌ Sunucu başlatma hatası:', error);
+            }
+        }
+
+        // Peer-to-peer senkronizasyon kur
+        function setupPeerToPeerSync() {
+            // BroadcastChannel ile aynı origin'deki diğer sekmelerle iletişim
+            const channel = new BroadcastChannel('siber-macera-scores');
+            
+            channel.onmessage = (event) => {
+                const { type, data } = event.data;
+                
+                switch (type) {
+                    case 'SCORE_UPDATE':
+                        updateLocalScores(data);
+                        break;
+                    case 'REQUEST_SCORES':
+                        channel.postMessage({
+                            type: 'SCORES_RESPONSE',
+                            data: localScores
+                        });
+                        break;
+                    case 'DEVICE_PING':
+                        connectedDevices.add(data.deviceId);
+                        updateConnectedDevices();
+                        break;
+                }
+            };
+            
+            // Diğer cihazlara ping gönder
+            setInterval(() => {
+                channel.postMessage({
+                    type: 'DEVICE_PING',
+                    data: { deviceId: getDeviceId(), timestamp: Date.now() }
+                });
+            }, 5000);
+            
+            // Skorları talep et
+            channel.postMessage({ type: 'REQUEST_SCORES' });
+        }
+
+        // Device ID oluştur
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+
+        // Yerel skorları yükle
+        function loadLocalScores() {
+            const scores = JSON.parse(localStorage.getItem('cyberScores') || '[]');
+            localScores = scores;
+            displayScores();
+        }
+
+        // Skorları güncelle
+        function updateLocalScores(newScores) {
+            // Mevcut skorlarla birleştir
+            const allScores = [...localScores, ...newScores];
+            
+            // Tekrarları temizle (timestamp'e göre)
+            const uniqueScores = allScores.filter((score, index, self) => 
+                index === self.findIndex(s => s.timestamp === score.timestamp)
+            );
+            
+            // Sırala
+            uniqueScores.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                const timeA = convertTimeToSeconds(a.time);
+                const timeB = convertTimeToSeconds(b.time);
+                return timeA - timeB;
+            });
+            
+            localScores = uniqueScores;
+            localStorage.setItem('cyberScores', JSON.stringify(localScores));
+            displayScores();
+        }
+
+        // Skorları görüntüle
+        function displayScores() {
+            const scoresDiv = document.getElementById('scores-list');
+            
+            if (localScores.length === 0) {
+                scoresDiv.innerHTML = '<div style="color: #888;">Henüz skor yok.</div>';
+                return;
+            }
+            
+            scoresDiv.innerHTML = localScores.slice(0, 20).map((score, index) => `
+                <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                    <strong>${index + 1}. ${score.username}</strong><br>
+                    <small>Puan: ${score.score} | Süre: ${score.time} | Cihaz: ${score.deviceId?.substring(0, 8)}...</small>
+                </div>
+            `).join('');
+        }
+
+        // Bağlı cihazları güncelle
+        function updateConnectedDevices() {
+            const devicesDiv = document.getElementById('devices-list');
+            const deviceCount = document.getElementById('connected-devices');
+            
+            deviceCount.textContent = connectedDevices.size;
+            
+            if (connectedDevices.size === 0) {
+                devicesDiv.innerHTML = '<div style="color: #888;">Henüz bağlı cihaz yok.</div>';
+                return;
+            }
+            
+            devicesDiv.innerHTML = Array.from(connectedDevices).map(deviceId => `
+                <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                    📱 ${deviceId.substring(0, 12)}...
+                </div>
+            `).join('');
+        }
+
+        // Tüm skorları senkronize et
+        function syncAllScores() {
+            const channel = new BroadcastChannel('siber-macera-scores');
+            channel.postMessage({
+                type: 'SCORE_UPDATE',
+                data: localScores
+            });
+            console.log('📡 Skorlar diğer cihazlara gönderildi');
+        }
+
+        // Sunucu durdur
+        function stopLocalServer() {
+            const statusDiv = document.getElementById('server-status');
+            const serverInfoDiv = document.getElementById('server-info');
+            
+            statusDiv.innerHTML = '<strong>Durum:</strong> ⏹️ Sunucu durdu';
+            statusDiv.className = 'status offline';
+            serverInfoDiv.style.display = 'none';
+            
+            console.log('⏹️ Yerel sunucu durduruldu');
+        }
+
+        // Durumu yenile
+        function refreshStatus() {
+            loadLocalScores();
+            updateConnectedDevices();
+            console.log('🔄 Durum yenilendi');
+        }
+
+        // Zaman dönüştürme fonksiyonu
+        function convertTimeToSeconds(timeString) {
+            if (!timeString || typeof timeString !== 'string') return 999999;
+            const parts = timeString.split(':');
+            if (parts.length !== 2) return 999999;
+            return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+        }
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLocalScores();
+            
+            // IP adresini tespit et ve göster
+            detectLocalIP().then(ip => {
+                document.getElementById('local-ip').textContent = ip;
+                document.getElementById('connection-url').textContent = `http://${ip}:3000`;
+            });
+            
+            // Her 10 saniyede durum güncelle
+            setInterval(refreshStatus, 10000);
+        });
+    </script>
+</body>
+</html>

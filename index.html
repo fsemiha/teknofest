@@ -315,39 +315,133 @@
                     showFirebaseStatus("🌐 Çoklu ekran modu: AKTİF", "#00ff99");
                 } else {
                     console.log("⚠️ Firebase bağlantısı kopuk");
-                    showFirebaseStatus("⚠️ Bağlantı kopuk - Yerel mod", "#ffaa00");
+                    showFirebaseStatus("⚠️ Bağlantı kopuk - Yerel ağ modu", "#ffaa00");
+                    // Firebase kopuksa yerel ağı kur
+                    setupLocalNetworkSync();
                 }
             });
             
         } catch (error) {
-            console.warn("❌ Firebase bağlantısı başarısız, yerel mod kullanılıyor:", error);
+            console.warn("❌ Firebase bağlantısı başarısız, yerel ağ modu kullanılıyor:", error);
             isFirebaseEnabled = false;
-            showFirebaseStatus("💾 Yerel mod - Sadece bu cihaz", "#ffaa00");
+            showFirebaseStatus("🏠 Yerel ağ modu - Sadece bu ağ", "#ffaa00");
+            setupLocalNetworkSync();
         }
         }, 300); // 300ms gecikme ile Firebase'i başlat
     } else {
-        console.warn("⚙️ Firebase konfigürasyonu eksik, yerel mod kullanılıyor");
+        console.warn("⚙️ Firebase konfigürasyonu eksik, yerel ağ modu kullanılıyor");
         console.log("📋 Çoklu ekran için FIREBASE_KURULUM.md dosyasını okuyun");
         isFirebaseEnabled = false;
-        showFirebaseStatus("⚙️ Firebase kurulum gerekli", "#ff4444");
+        showFirebaseStatus("🏠 Yerel ağ modu aktif", "#ff4444");
+        setupLocalNetworkSync();
     }
     
-    // Firebase durumunu ekranda göster (gizli mod)
-    function showFirebaseStatus(message, color) {
-        // Firebase durumu console'da görünsün ama ekranda görünmesin
-        if (message.includes("AKTİF")) {
-            console.log("🟢 " + message);
-        } else if (message.includes("kopuk")) {
-            console.log("🟡 " + message);
-        } else {
-            console.log("🔴 " + message);
+        // Firebase durumunu ekranda göster (gizli mod)
+        function showFirebaseStatus(message, color) {
+            // Firebase durumu console'da görünsün ama ekranda görünmesin
+            if (message.includes("AKTİF")) {
+                console.log("🟢 " + message);
+            } else if (message.includes("kopuk")) {
+                console.log("🟡 " + message);
+            } else {
+                console.log("🔴 " + message);
+            }
+            
+            // Görsel mesaj gösterme (istenirse aktif edilebilir)
+            // Kullanıcı debug yapmak isterse bu kısmı açabilir
         }
-        
-        // Görsel mesaj gösterme (istenirse aktif edilebilir)
-        // Kullanıcı debug yapmak isterse bu kısmı açabilir
-    }
 
-    // Custom password analysis functions
+        // Yerel ağ senkronizasyonu kur
+        function setupLocalNetworkSync() {
+            console.log("🏠 Yerel ağ senkronizasyonu başlatılıyor...");
+            
+            if ('BroadcastChannel' in window) {
+                localNetworkChannel = new BroadcastChannel('siber-macera-scores');
+                
+                localNetworkChannel.onmessage = (event) => {
+                    const { type, data } = event.data;
+                    console.log("📡 Yerel ağ mesajı alındı:", type);
+                    
+                    switch (type) {
+                        case 'SCORE_UPDATE':
+                            handleNetworkScoreUpdate(data);
+                            break;
+                        case 'REQUEST_SCORES':
+                            sendLocalScores();
+                            break;
+                        case 'DEVICE_PING':
+                            console.log("📱 Cihaz ping alındı:", data.deviceId);
+                            break;
+                    }
+                };
+                
+                // Diğer cihazlardan skorları talep et
+                localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
+                
+                // Periyodik olarak ping gönder
+                setInterval(() => {
+                    localNetworkChannel.postMessage({
+                        type: 'DEVICE_PING',
+                        data: { 
+                            deviceId: getDeviceId(), 
+                            timestamp: Date.now(),
+                            page: 'game'
+                        }
+                    });
+                }, 15000);
+                
+                console.log("✅ Yerel ağ senkronizasyonu aktif");
+            } else {
+                console.warn("❌ BroadcastChannel desteklenmiyor");
+            }
+        }
+
+        // Ağdan gelen skor güncellemesini işle
+        function handleNetworkScoreUpdate(newScores) {
+            if (!newScores || newScores.length === 0) return;
+            
+            console.log("📊 Ağdan skor güncellemesi alındı:", newScores.length);
+            
+            // Mevcut yerel skorları al
+            const localScores = getLocalScores();
+            
+            // Yeni skorları ekle
+            const allScores = [...localScores, ...newScores];
+            
+            // Tekrarları temizle (timestamp'e göre)
+            const uniqueScores = allScores.filter((score, index, self) => 
+                index === self.findIndex(s => s.timestamp === score.timestamp)
+            );
+            
+            // Sırala
+            uniqueScores.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                const timeA = convertTimeToSeconds(a.time);
+                const timeB = convertTimeToSeconds(b.time);
+                return timeA - timeB;
+            });
+            
+            // localStorage'a kaydet
+            localStorage.setItem('cyberScores', JSON.stringify(uniqueScores));
+            
+            console.log("🔄 Skorlar yerel ağdan güncellendi:", uniqueScores.length);
+        }
+
+        // Yerel skorları ağa gönder
+        function sendLocalScores() {
+            if (!localNetworkChannel) return;
+            
+            const localScores = getLocalScores();
+            if (localScores.length > 0) {
+                localNetworkChannel.postMessage({
+                    type: 'SCORE_UPDATE',
+                    data: localScores
+                });
+                console.log("📤 Yerel skorlar ağa gönderildi:", localScores.length);
+            }
+        }    // Custom password analysis functions
     function analyzePassword(password) {
     let charsetSize = 0;
     let usedSets = [];
@@ -476,10 +570,17 @@
             deviceId: getDeviceId()
         };
         
+        console.log("💾 Skor kaydediliyor:", {
+            score: newScore,
+            firebaseEnabled: isFirebaseEnabled,
+            databaseExists: database ? "Var" : "Yok"
+        });
+        
         if (isFirebaseEnabled) {
             // Firebase'e kaydet (tüm ekranlar görebilsin)
             saveScoreToFirebase(newScore);
         } else {
+            console.log("📱 Firebase kapalı, yerel kayıt yapılıyor");
             // Yerel olarak kaydet
             saveScoreLocally(newScore);
         }
@@ -562,6 +663,21 @@
         }
         
         localStorage.setItem('cyberScores', JSON.stringify(scores));
+        
+        console.log("✅ Skor yerel olarak kaydedildi:", {
+            newScore: newScore,
+            totalScores: scores.length,
+            localStorageSize: JSON.stringify(scores).length
+        });
+        
+        // Yerel ağa da gönder
+        if (localNetworkChannel) {
+            localNetworkChannel.postMessage({
+                type: 'SCORE_UPDATE',
+                data: [newScore]
+            });
+            console.log("📡 Yeni skor yerel ağa gönderildi");
+        }
     }
     
     function getScores() {
