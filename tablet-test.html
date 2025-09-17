@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablet Test - Siber Macera</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0a1428, #1a3a5c);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 12px;
+            border: 2px solid rgba(0,255,153,0.3);
+        }
+        .status-card {
+            background: rgba(0,0,0,0.4);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #00ff99;
+        }
+        .device-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .info-card {
+            background: rgba(255,255,255,0.08);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        button {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.4);
+        }
+        .success { background: linear-gradient(135deg, #28a745, #218838); }
+        .warning { background: linear-gradient(135deg, #ffc107, #e0a800); }
+        .danger { background: linear-gradient(135deg, #dc3545, #c82333); }
+        .score-display {
+            background: rgba(0,255,153,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 2px solid rgba(0,255,153,0.3);
+        }
+        .network-devices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .device-card {
+            background: rgba(255,255,255,0.08);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+        }
+        .online { border-color: #00ff99; }
+        .offline { border-color: #ff6b6b; }
+        h1, h2 { color: #00ff99; text-shadow: 0 0 10px rgba(0,255,153,0.3); }
+        .log-output {
+            background: rgba(0,0,0,0.6);
+            color: #00ff99;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            border: 1px solid rgba(0,255,153,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Tablet Test Sistemi - Siber Macera</h1>
+        
+        <div class="test-section">
+            <h2>📱 Cihaz Bilgileri</h2>
+            <div class="device-info">
+                <div class="info-card">
+                    <h3>🆔 Device ID</h3>
+                    <div id="device-id">Yükleniyor...</div>
+                </div>
+                <div class="info-card">
+                    <h3>🌐 Network Status</h3>
+                    <div id="network-status">Kontrol ediliyor...</div>
+                </div>
+                <div class="info-card">
+                    <h3>🔄 Broadcast Channel</h3>
+                    <div id="broadcast-status">Test ediliyor...</div>
+                </div>
+                <div class="info-card">
+                    <h3>💾 LocalStorage</h3>
+                    <div id="storage-status">Kontrol ediliyor...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Test İşlemleri</h2>
+            <button onclick="testConnection()" class="success">🔗 Bağlantı Testi</button>
+            <button onclick="sendTestScore()" class="success">📊 Test Skoru Gönder</button>
+            <button onclick="requestScores()" class="warning">📥 Skorları Talep Et</button>
+            <button onclick="clearLocalData()" class="danger">🗑️ Yerel Veriyi Temizle</button>
+            <button onclick="openScoreboard()" class="success">📋 Skor Tablosunu Aç</button>
+            <button onclick="openGame()" class="success">🎮 Oyunu Aç</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Yerel Skorlar</h2>
+            <div class="score-display" id="local-scores">
+                Skorlar yükleniyor...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🌐 Ağdaki Cihazlar</h2>
+            <div class="network-devices" id="network-devices">
+                <div class="device-card">
+                    <div>🔍 Cihazlar aranıyor...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 Network Log</h2>
+            <div class="log-output" id="log-output"></div>
+            <button onclick="clearLog()" class="warning">🧹 Log Temizle</button>
+        </div>
+    </div>
+
+    <script>
+        let localNetworkChannel = null;
+        let connectedDevices = new Map();
+        let testStartTime = Date.now();
+
+        // Device ID oluştur
+        function getDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = 'tablet_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+
+        // Log mesajları
+        function logMessage(message, type = 'info') {
+            const logOutput = document.getElementById('log-output');
+            const timestamp = new Date().toLocaleTimeString('tr-TR');
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+            
+            logOutput.innerHTML += `<div style="margin: 2px 0;">[${timestamp}] ${icon} ${message}</div>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        // Yerel ağ sistemini başlat
+        function initLocalNetwork() {
+            if ('BroadcastChannel' in window) {
+                localNetworkChannel = new BroadcastChannel('siber-macera-scores');
+                
+                localNetworkChannel.onmessage = (event) => {
+                    const { type, data } = event.data;
+                    logMessage(`📡 Mesaj alındı: ${type}`, 'info');
+                    
+                    switch (type) {
+                        case 'SCORE_UPDATE':
+                            handleScoreUpdate(data);
+                            break;
+                        case 'NEW_SCORE':
+                            handleNewScore(data);
+                            break;
+                        case 'REQUEST_SCORES':
+                            sendLocalScores();
+                            break;
+                        case 'DEVICE_PING':
+                            handleDevicePing(data);
+                            break;
+                    }
+                };
+
+                // Kendini tanıt
+                localNetworkChannel.postMessage({
+                    type: 'DEVICE_PING',
+                    data: {
+                        deviceId: getDeviceId(),
+                        timestamp: Date.now(),
+                        page: 'tablet-test',
+                        userAgent: navigator.userAgent.substring(0, 50)
+                    }
+                });
+
+                // Periyodik ping
+                setInterval(() => {
+                    localNetworkChannel.postMessage({
+                        type: 'DEVICE_PING',
+                        data: {
+                            deviceId: getDeviceId(),
+                            timestamp: Date.now(),
+                            page: 'tablet-test',
+                            scoreCount: getLocalScores().length
+                        }
+                    });
+                }, 5000);
+
+                document.getElementById('broadcast-status').innerHTML = '✅ Aktif';
+                logMessage('Yerel ağ kanalı başlatıldı', 'success');
+            } else {
+                document.getElementById('broadcast-status').innerHTML = '❌ Desteklenmiyor';
+                logMessage('BroadcastChannel desteklenmiyor', 'error');
+            }
+        }
+
+        // Cihaz ping'i işle
+        function handleDevicePing(data) {
+            const deviceId = data.deviceId;
+            const now = Date.now();
+            
+            connectedDevices.set(deviceId, {
+                ...data,
+                lastSeen: now
+            });
+            
+            updateDeviceList();
+        }
+
+        // Cihaz listesini güncelle
+        function updateDeviceList() {
+            const devicesContainer = document.getElementById('network-devices');
+            const now = Date.now();
+            
+            // 30 saniyeden eski cihazları kaldır
+            for (let [deviceId, device] of connectedDevices) {
+                if (now - device.lastSeen > 30000) {
+                    connectedDevices.delete(deviceId);
+                }
+            }
+            
+            if (connectedDevices.size === 0) {
+                devicesContainer.innerHTML = '<div class="device-card"><div>🔍 Ağda başka cihaz bulunamadı</div></div>';
+                return;
+            }
+
+            devicesContainer.innerHTML = '';
+            for (let [deviceId, device] of connectedDevices) {
+                const isOnline = (now - device.lastSeen) < 15000;
+                const card = document.createElement('div');
+                card.className = `device-card ${isOnline ? 'online' : 'offline'}`;
+                card.innerHTML = `
+                    <div style="font-weight: bold;">${isOnline ? '🟢' : '🔴'} ${deviceId}</div>
+                    <div style="font-size: 0.9rem; margin: 5px 0;">
+                        📄 ${device.page || 'unknown'}<br>
+                        📊 ${device.scoreCount || 0} skor<br>
+                        🕒 ${Math.round((now - device.lastSeen) / 1000)}s önce
+                    </div>
+                `;
+                devicesContainer.appendChild(card);
+            }
+        }
+
+        // Skorları al
+        function getLocalScores() {
+            return JSON.parse(localStorage.getItem('cyberScores') || '[]');
+        }
+
+        // Skor güncellemesi işle
+        function handleScoreUpdate(scores) {
+            if (!scores || scores.length === 0) return;
+            
+            logMessage(`📊 ${scores.length} skor güncellendi`, 'success');
+            
+            const localScores = getLocalScores();
+            const allScores = [...localScores, ...scores];
+            
+            // Tekrarları temizle
+            const uniqueScores = allScores.filter((score, index, self) => 
+                index === self.findIndex(s => s.timestamp === score.timestamp)
+            );
+            
+            localStorage.setItem('cyberScores', JSON.stringify(uniqueScores));
+            updateScoreDisplay();
+        }
+
+        // Yeni skor işle
+        function handleNewScore(newScore) {
+            if (!newScore) return;
+            
+            logMessage(`⚡ Yeni skor: ${newScore.username} - ${newScore.score}`, 'success');
+            
+            const localScores = getLocalScores();
+            
+            // Zaten var mı kontrol et
+            if (localScores.find(s => s.timestamp === newScore.timestamp)) {
+                return;
+            }
+            
+            localScores.push(newScore);
+            localStorage.setItem('cyberScores', JSON.stringify(localScores));
+            updateScoreDisplay();
+        }
+
+        // Skor görünümünü güncelle
+        function updateScoreDisplay() {
+            const scores = getLocalScores();
+            const scoresDiv = document.getElementById('local-scores');
+            
+            if (scores.length === 0) {
+                scoresDiv.innerHTML = '<div style="text-align: center; color: #888;">Henüz skor yok</div>';
+                return;
+            }
+            
+            scoresDiv.innerHTML = `
+                <div style="margin-bottom: 15px;"><strong>📊 Toplam ${scores.length} skor</strong></div>
+                ${scores.slice(0, 5).map((score, index) => `
+                    <div style="margin: 8px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px;">
+                        <strong>${index + 1}. ${score.username || 'İsimsiz'}</strong><br>
+                        Puan: ${score.score} | Süre: ${score.time} | ${score.date}
+                    </div>
+                `).join('')}
+                ${scores.length > 5 ? `<div style="text-align: center; color: #888;">... ve ${scores.length - 5} skor daha</div>` : ''}
+            `;
+        }
+
+        // Test fonksiyonları
+        function testConnection() {
+            logMessage('🔗 Bağlantı testi başlatılıyor...', 'info');
+            
+            if (localNetworkChannel) {
+                localNetworkChannel.postMessage({
+                    type: 'DEVICE_PING',
+                    data: {
+                        deviceId: getDeviceId(),
+                        timestamp: Date.now(),
+                        page: 'tablet-test',
+                        test: true
+                    }
+                });
+                logMessage('Ping mesajı gönderildi', 'success');
+            } else {
+                logMessage('Ağ kanalı mevcut değil', 'error');
+            }
+        }
+
+        function sendTestScore() {
+            const testScore = {
+                username: `Test_${Math.floor(Math.random() * 1000)}`,
+                score: Math.floor(Math.random() * 800) + 200,
+                time: Math.floor(Math.random() * 3) + ':' + Math.floor(Math.random() * 60).toString().padStart(2, '0'),
+                date: new Date().toLocaleDateString('tr-TR'),
+                timestamp: Date.now(),
+                deviceId: getDeviceId()
+            };
+
+            const scores = getLocalScores();
+            scores.push(testScore);
+            localStorage.setItem('cyberScores', JSON.stringify(scores));
+
+            if (localNetworkChannel) {
+                localNetworkChannel.postMessage({
+                    type: 'NEW_SCORE',
+                    data: testScore
+                });
+                logMessage(`📊 Test skoru gönderildi: ${testScore.username} - ${testScore.score}`, 'success');
+            }
+
+            updateScoreDisplay();
+        }
+
+        function requestScores() {
+            if (localNetworkChannel) {
+                localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
+                logMessage('📥 Skor talebi gönderildi', 'info');
+            } else {
+                logMessage('Ağ kanalı mevcut değil', 'error');
+            }
+        }
+
+        function sendLocalScores() {
+            const scores = getLocalScores();
+            if (scores.length > 0 && localNetworkChannel) {
+                localNetworkChannel.postMessage({
+                    type: 'SCORE_UPDATE',
+                    data: scores
+                });
+                logMessage(`📤 ${scores.length} yerel skor gönderildi`, 'success');
+            }
+        }
+
+        function clearLocalData() {
+            if (confirm('Tüm yerel veri silinsin mi?')) {
+                localStorage.removeItem('cyberScores');
+                updateScoreDisplay();
+                logMessage('🗑️ Yerel veri temizlendi', 'warning');
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('log-output').innerHTML = '';
+        }
+
+        function openScoreboard() {
+            window.open('scoreboard.html', '_blank');
+        }
+
+        function openGame() {
+            window.open('index.html', '_blank');
+        }
+
+        // Durum güncellemeleri
+        function updateStatus() {
+            document.getElementById('device-id').innerHTML = `<strong>${getDeviceId()}</strong>`;
+            document.getElementById('network-status').innerHTML = navigator.onLine ? '🟢 Çevrimiçi' : '🔴 Çevrimdışı';
+            document.getElementById('storage-status').innerHTML = '✅ Kullanılabilir';
+            
+            updateScoreDisplay();
+            updateDeviceList();
+        }
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            logMessage('Tablet test sistemi başlatılıyor...', 'info');
+            
+            initLocalNetwork();
+            updateStatus();
+            
+            // Periyodik güncellemeler
+            setInterval(updateStatus, 2000);
+            
+            logMessage('Test sistemi hazır', 'success');
+        });
+    </script>
+</body>
+</html>

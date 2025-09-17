@@ -372,25 +372,35 @@
                         case 'DEVICE_PING':
                             console.log("📱 Cihaz ping alındı:", data.deviceId);
                             break;
+                        case 'NEW_SCORE':
+                            handleNewNetworkScore(data);
+                            break;
                     }
                 };
                 
                 // Diğer cihazlardan skorları talep et
                 localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
                 
-                // Periyodik olarak ping gönder
+                // Periyodik olarak ping gönder ve skorları senkronize et
                 setInterval(() => {
                     localNetworkChannel.postMessage({
                         type: 'DEVICE_PING',
                         data: { 
                             deviceId: getDeviceId(), 
                             timestamp: Date.now(),
-                            page: 'game'
+                            page: 'game',
+                            scoreCount: getLocalScores().length
                         }
                     });
-                }, 15000);
+                    
+                    // Her 30 saniyede skorları senkronize et
+                    if (Date.now() % 30000 < 5000) {
+                        localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
+                    }
+                }, 5000); // 5 saniyede bir
                 
-                console.log("✅ Yerel ağ senkronizasyonu aktif");
+                console.log("✅ Yerel ağ senkronizasyonu aktif - Tabletler arası skor paylaşımı çalışıyor");
+                showFirebaseStatus("🏠 Yerel ağ modu - Tabletler arası senkronizasyon", "#00ff99");
             } else {
                 console.warn("❌ BroadcastChannel desteklenmiyor");
             }
@@ -427,6 +437,49 @@
             localStorage.setItem('cyberScores', JSON.stringify(uniqueScores));
             
             console.log("🔄 Skorlar yerel ağdan güncellendi:", uniqueScores.length);
+        }
+
+        // Yeni tek skor işle (anında senkronizasyon için)
+        function handleNewNetworkScore(newScore) {
+            if (!newScore) return;
+            
+            console.log("⚡ Yeni skor anında alındı:", newScore.username, newScore.score);
+            
+            const localScores = getLocalScores();
+            
+            // Bu skor zaten var mı kontrol et
+            const exists = localScores.find(s => s.timestamp === newScore.timestamp);
+            if (exists) {
+                console.log("📋 Skor zaten mevcut, atlanıyor");
+                return;
+            }
+            
+            // Yeni skoru ekle
+            localScores.push(newScore);
+            
+            // Sırala
+            localScores.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                const timeA = convertTimeToSeconds(a.time);
+                const timeB = convertTimeToSeconds(b.time);
+                return timeA - timeB;
+            });
+            
+            // localStorage'a kaydet
+            localStorage.setItem('cyberScores', JSON.stringify(localScores));
+            
+            console.log("⚡ Yeni skor eklendi ve sıralandı:", localScores.length);
+            
+            // Eğer scoreboard açıksa güncelle
+            if (window.location.href.includes('scoreboard.html') || 
+                document.getElementById('scoreboard-panel').style.display !== 'none') {
+                console.log("📊 Scoreboard görünür, güncelleniyor...");
+                if (typeof displayScoreboard === 'function') {
+                    setTimeout(() => displayScoreboard(), 500);
+                }
+            }
         }
 
         // Yerel skorları ağa gönder
@@ -670,13 +723,21 @@
             localStorageSize: JSON.stringify(scores).length
         });
         
-        // Yerel ağa da gönder
+        // Yerel ağa anında gönder (diğer tabletler için)
         if (localNetworkChannel) {
             localNetworkChannel.postMessage({
-                type: 'SCORE_UPDATE',
-                data: [newScore]
+                type: 'NEW_SCORE',
+                data: newScore
             });
-            console.log("📡 Yeni skor yerel ağa gönderildi");
+            console.log("⚡ Yeni skor anında yerel ağa gönderildi - Diğer tabletler güncellendi");
+            
+            // Tüm skorları da gönder (güvenlik için)
+            setTimeout(() => {
+                localNetworkChannel.postMessage({
+                    type: 'SCORE_UPDATE',
+                    data: scores
+                });
+            }, 1000);
         }
     }
     

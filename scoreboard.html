@@ -751,18 +751,21 @@
         
         // Yerel ağ senkronizasyonu kur
         function setupLocalNetworkSync() {
-            console.log("🏠 Yerel ağ senkronizasyonu başlatılıyor...");
+            console.log("🏠 Scoreboard yerel ağ senkronizasyonu başlatılıyor...");
             
             if ('BroadcastChannel' in window) {
                 localNetworkChannel = new BroadcastChannel('siber-macera-scores');
                 
                 localNetworkChannel.onmessage = (event) => {
                     const { type, data } = event.data;
-                    console.log("📡 Yerel ağ mesajı alındı:", type, data);
+                    console.log("📡 Scoreboard ağ mesajı alındı:", type);
                     
                     switch (type) {
                         case 'SCORE_UPDATE':
                             handleNetworkScoreUpdate(data);
+                            break;
+                        case 'NEW_SCORE':
+                            handleNewNetworkScore(data);
                             break;
                         case 'REQUEST_SCORES':
                             sendLocalScores();
@@ -771,7 +774,7 @@
                             mergeNetworkScores(data);
                             break;
                         case 'DEVICE_PING':
-                            console.log("📱 Cihaz ping alındı:", data.deviceId);
+                            console.log("📱 Scoreboard cihaz ping alındı:", data.deviceId);
                             break;
                     }
                 };
@@ -779,20 +782,24 @@
                 // Diğer cihazlardan skorları talep et
                 localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
                 
-                // Periyodik olarak ping gönder
+                // Periyodik skorboard güncellemesi ve senkronizasyon
                 setInterval(() => {
-                    localNetworkChannel.postMessage({
-                        type: 'DEVICE_PING',
-                        data: { 
-                            deviceId: getDeviceId(), 
-                            timestamp: Date.now(),
-                            page: 'scoreboard'
-                        }
-                    });
-                }, 10000);
+                    // Skorları talep et
+                    localNetworkChannel.postMessage({ type: 'REQUEST_SCORES' });
+                    
+                    // Kendi skorlarını paylaş
+                    sendLocalScores();
+                    
+                    // Skorboard'u güncelle
+                    setTimeout(() => {
+                        loadScoreboard();
+                    }, 1000);
+                    
+                    console.log("🔄 Periyodik scoreboard senkronizasyonu tamamlandı");
+                }, 8000); // 8 saniyede bir güncelle
                 
-                console.log("✅ Yerel ağ senkronizasyonu aktif");
-                showFirebaseStatus("🏠 Yerel ağ senkronizasyonu aktif", "#00aaff");
+                console.log("✅ Scoreboard yerel ağ senkronizasyonu aktif - Tabletler arası skor görüntüleme");
+                showFirebaseStatus("🏠 Yerel ağ - Tabletler arası senkronizasyon", "#00ff99");
             } else {
                 console.warn("❌ BroadcastChannel desteklenmiyor");
                 showFirebaseStatus("📱 Sadece yerel mod", "#ffaa00");
@@ -852,6 +859,46 @@
                 console.log("🔄 Ağ skorları birleştiriliyor:", networkScores.length);
                 handleNetworkScoreUpdate(networkScores);
             }
+        }
+
+        // Yeni tek skor işle (anında güncelleme için)
+        function handleNewNetworkScore(newScore) {
+            if (!newScore) return;
+            
+            console.log("⚡ Scoreboard'da yeni skor anında alındı:", newScore.username, newScore.score);
+            
+            const localScores = getLocalScores();
+            
+            // Bu skor zaten var mı kontrol et
+            const exists = localScores.find(s => s.timestamp === newScore.timestamp);
+            if (exists) {
+                console.log("📋 Skor zaten mevcut, atlanıyor");
+                return;
+            }
+            
+            // Yeni skoru ekle
+            localScores.push(newScore);
+            
+            // Sırala
+            localScores.sort((a, b) => {
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
+                const timeA = convertTimeToSeconds(a.time);
+                const timeB = convertTimeToSeconds(b.time);
+                return timeA - timeB;
+            });
+            
+            // localStorage'a kaydet
+            localStorage.setItem('cyberScores', JSON.stringify(localScores));
+            
+            console.log("⚡ Scoreboard'a yeni skor eklendi:", localScores.length);
+            
+            // Skorboard'u anında güncelle
+            setTimeout(() => {
+                loadScoreboard();
+                console.log("📊 Scoreboard anında güncellendi");
+            }, 500);
         }
 
         // Device ID oluştur
