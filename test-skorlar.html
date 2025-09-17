@@ -78,6 +78,7 @@
             <button onclick="addTestScore()">💾 Test Skoru Ekle</button>
             <button onclick="loadScores()" class="success">🔄 Skorları Yükle</button>
             <button onclick="clearScores()" class="danger">🗑️ Skorları Temizle</button>
+            <button onclick="showRawLocalStorage()" style="background: #6c757d;">🔍 Ham Veriyi Göster</button>
         </div>
 
         <div class="section">
@@ -210,19 +211,38 @@
 
         // Skorları yükle
         function loadScores() {
+            console.log("🔄 Skorlar yükleniyor...");
+            
             // LocalStorage skorları
             const localScores = JSON.parse(localStorage.getItem('cyberScores') || '[]');
             const localScoresDiv = document.getElementById('local-scores');
             
+            console.log("📊 LocalStorage'dan alınan skorlar:", localScores);
+            console.log("📊 Skor sayısı:", localScores.length);
+            
             if (localScores.length === 0) {
-                localScoresDiv.innerHTML = '<div style="color: #888;">Henüz yerel skor yok.</div>';
+                localScoresDiv.innerHTML = '<div style="color: #888;">❌ Henüz yerel skor yok. Test skoru ekleyin!</div>';
             } else {
-                localScoresDiv.innerHTML = localScores.slice(0, 10).map((score, index) => `
-                    <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 4px;">
-                        <strong>${index + 1}. ${score.username}</strong><br>
-                        Puan: ${score.score} | Süre: ${score.time} | Tarih: ${score.date}
-                    </div>
-                `).join('');
+                // Skorları sırala
+                localScores.sort((a, b) => {
+                    if (b.score !== a.score) {
+                        return b.score - a.score;
+                    }
+                    const timeA = convertTimeToSeconds(a.time);
+                    const timeB = convertTimeToSeconds(b.time);
+                    return timeA - timeB;
+                });
+                
+                localScoresDiv.innerHTML = `
+                    <div style="color: #4CAF50; margin-bottom: 10px;">✅ ${localScores.length} skor bulundu</div>
+                    ${localScores.slice(0, 10).map((score, index) => `
+                        <div style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                            <strong>${index + 1}. ${score.username || 'İsimsiz'}</strong><br>
+                            Puan: ${score.score || 0} | Süre: ${score.time || 'N/A'} | Tarih: ${score.date || 'N/A'}
+                            ${score.deviceId ? `<br><small>Device: ${score.deviceId}</small>` : ''}
+                        </div>
+                    `).join('')}
+                `;
             }
 
             // Firebase skorları
@@ -277,6 +297,26 @@
                 localStorage.removeItem('cyberScores');
                 loadScores();
                 console.log("🗑️ Yerel skorlar temizlendi");
+            }
+        }
+        
+        // Ham localStorage verisini göster
+        function showRawLocalStorage() {
+            const rawData = localStorage.getItem('cyberScores');
+            console.log("🔍 Ham localStorage verisi:", rawData);
+            
+            if (!rawData) {
+                alert("❌ localStorage'da 'cyberScores' anahtarı bulunamadı!");
+                return;
+            }
+            
+            try {
+                const parsedData = JSON.parse(rawData);
+                console.log("📋 Parse edilmiş veri:", parsedData);
+                alert(`✅ localStorage'da ${parsedData.length} skor bulundu!\n\nİlk skor:\n${JSON.stringify(parsedData[0] || 'Boş', null, 2)}`);
+            } catch (error) {
+                console.error("❌ JSON parse hatası:", error);
+                alert("❌ localStorage verisi bozuk: " + error.message);
             }
         }
 
