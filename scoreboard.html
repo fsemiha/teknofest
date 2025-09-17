@@ -779,12 +779,31 @@
         function getScoresFromFirebase() {
             return new Promise((resolve, reject) => {
                 try {
+                    console.log("🔍 Firebase'den skorlar alınıyor...");
                     const scoresRef = database.ref('scores');
-                    scoresRef.orderByChild('score').limitToLast(600).once('value', (snapshot) => {
-                        const scores = [];
-                        snapshot.forEach((child) => {
-                            scores.push(child.val());
+                    
+                    // Önce veri var mı kontrol et
+                    scoresRef.once('value', (snapshot) => {
+                        console.log("📊 Firebase snapshot alındı:", {
+                            exists: snapshot.exists(),
+                            hasChildren: snapshot.hasChildren(),
+                            numChildren: snapshot.numChildren(),
+                            val: snapshot.val()
                         });
+                        
+                        const scores = [];
+                        if (snapshot.exists()) {
+                            snapshot.forEach((child) => {
+                                const scoreData = child.val();
+                                if (scoreData && scoreData.username && scoreData.score !== undefined) {
+                                    scores.push(scoreData);
+                                } else {
+                                    console.warn("⚠️ Geçersiz skor verisi:", scoreData);
+                                }
+                            });
+                        }
+                        
+                        console.log("📈 Firebase'den alınan skor sayısı:", scores.length);
                         
                         // Sıralama: önce puan, sonra süre
                         scores.sort((a, b) => {
@@ -798,11 +817,13 @@
                         
                         resolve(scores);
                     }, (error) => {
-                        console.error("Firebase'den skorlar alınamadı:", error);
+                        console.error("❌ Firebase'den skorlar alınamadı:", error);
+                        console.log("🔄 Yerel skorlara geçiliyor...");
                         resolve(getLocalScores());
                     });
                 } catch (error) {
-                    console.error("Firebase okuma hatası:", error);
+                    console.error("❌ Firebase okuma hatası:", error);
+                    console.log("🔄 Yerel skorlara geçiliyor...");
                     resolve(getLocalScores());
                 }
             });
@@ -827,11 +848,24 @@
             // Yükleniyor göstergesi
             scoreboardList.innerHTML = '<div style="text-align: center; color: #ffaa00; padding: 20px;">📊 Skorlar yükleniyor...</div>';
             
+            console.log("🔄 Skorlar yükleniyor...", {
+                isFirebaseEnabled: isFirebaseEnabled,
+                database: database ? "Mevcut" : "Null"
+            });
+            
             getScores().then(scores => {
+                console.log("✅ Skorlar alındı:", {
+                    count: scores.length,
+                    sample: scores.slice(0, 3)
+                });
+                
                 totalScores = scores;
                 
                 if (totalScores.length === 0) {
-                    scoreboardList.innerHTML = '<div style="text-align: center; color: #cccccc; padding: 20px;">Henüz kayıtlı skor yok.</div>';
+                    const emptyMessage = isFirebaseEnabled ? 
+                        '<div style="text-align: center; color: #cccccc; padding: 20px;">🎮 Henüz kimse oynamadı!<br><small>İlk skor için oyunu oynayın.</small></div>' :
+                        '<div style="text-align: center; color: #cccccc; padding: 20px;">📱 Yerel mod aktif<br><small>Bu cihazda henüz kayıtlı skor yok.</small></div>';
+                    scoreboardList.innerHTML = emptyMessage;
                     paginationControls.style.display = 'none';
                     return;
                 }
@@ -1008,7 +1042,45 @@
             }
         }
 
-        // Firebase için gerçek zamanlı skorboard dinleyicisi
+        // Firebase durumunu test et ve skor verilerini kontrol et
+        function testFirebaseConnection() {
+            console.log("🧪 Firebase bağlantısı test ediliyor...");
+            
+            if (!isFirebaseEnabled) {
+                console.log("❌ Firebase kapalı - yerel moda geçiliyor");
+                return;
+            }
+            
+            // Test skoru ekle (geliştirme amaçlı)
+            if (window.location.hash === '#test') {
+                const testScore = {
+                    username: 'Test Kullanıcısı',
+                    score: 999,
+                    time: '05:30',
+                    date: new Date().toLocaleDateString('tr-TR'),
+                    timestamp: Date.now(),
+                    deviceId: 'test_device_' + Date.now()
+                };
+                
+                database.ref('scores').push(testScore).then(() => {
+                    console.log("✅ Test skoru eklendi");
+                    loadScoreboardWithUpdate();
+                }).catch(error => {
+                    console.error("❌ Test skoru eklenemedi:", error);
+                });
+            }
+            
+            // Firebase veri yapısını kontrol et
+            database.ref('scores').limitToFirst(1).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    console.log("✅ Firebase'de veri mevcut");
+                    const firstScore = snapshot.val();
+                    console.log("📋 İlk skor örneği:", firstScore);
+                } else {
+                    console.log("⚠️ Firebase'de henüz veri yok");
+                }
+            });
+        }
         function setupRealtimeScoreboard() {
             if (isFirebaseEnabled) {
                 console.log("🔄 Gerçek zamanlı skorboard dinleyicisi başlatılıyor...");
@@ -1069,7 +1141,18 @@
 
         // Initial load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log("🚀 Scoreboard yükleniyor...");
+            console.log("🔧 Firebase durumu:", {
+                isFirebaseEnabled: isFirebaseEnabled,
+                database: database ? "Mevcut" : "Null"
+            });
+            
+            // Firebase bağlantısını test et
+            testFirebaseConnection();
+            
+            // Skorları yükle
             loadScoreboardWithUpdate();
+            
             // Firebase bağlantısı için biraz bekle sonra gerçek zamanlı sistemi başlat
             setTimeout(checkFirebaseAndSetupRealtime, 1000);
         });

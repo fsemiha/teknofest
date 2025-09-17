@@ -487,10 +487,16 @@
     
     function saveScoreToFirebase(newScore) {
         try {
+            console.log("🔥 Firebase'e skor kaydediliyor:", newScore);
+            console.log("🔗 Database durumu:", {
+                database: database ? "Mevcut" : "Null",
+                isFirebaseEnabled: isFirebaseEnabled
+            });
+            
             // Firebase'e yeni skoru ekle
             const scoresRef = database.ref('scores');
             scoresRef.push(newScore).then(() => {
-                console.log("Skor Firebase'e başarıyla kaydedildi");
+                console.log("✅ Skor Firebase'e başarıyla kaydedildi");
                 
                 // Skor limitini kontrol et ve eski skorları temizle
                 scoresRef.orderByChild('score').limitToLast(600).once('value', (snapshot) => {
@@ -498,6 +504,8 @@
                     snapshot.forEach((child) => {
                         firebaseScores.push({ key: child.key, ...child.val() });
                     });
+                    
+                    console.log("📊 Firebase'deki toplam skor sayısı:", firebaseScores.length);
                     
                     // Sıralama: önce puan, sonra süre
                     firebaseScores.sort((a, b) => {
@@ -512,6 +520,7 @@
                     // En fazla 500 skoru tut, fazlasını sil
                     if (firebaseScores.length > 500) {
                         const toDelete = firebaseScores.slice(500);
+                        console.log(`🗑️ ${toDelete.length} eski skor siliniyor...`);
                         toDelete.forEach(scoreToDelete => {
                             scoresRef.child(scoreToDelete.key).remove();
                         });
@@ -566,12 +575,30 @@
     function getScoresFromFirebase() {
         return new Promise((resolve, reject) => {
             try {
+                console.log("🔍 Firebase'den skorlar alınıyor...");
                 const scoresRef = database.ref('scores');
-                scoresRef.orderByChild('score').limitToLast(600).once('value', (snapshot) => {
-                    const scores = [];
-                    snapshot.forEach((child) => {
-                        scores.push(child.val());
+                
+                // Önce veri var mı kontrol et
+                scoresRef.once('value', (snapshot) => {
+                    console.log("📊 Firebase snapshot alındı:", {
+                        exists: snapshot.exists(),
+                        hasChildren: snapshot.hasChildren(),
+                        numChildren: snapshot.numChildren()
                     });
+                    
+                    const scores = [];
+                    if (snapshot.exists()) {
+                        snapshot.forEach((child) => {
+                            const scoreData = child.val();
+                            if (scoreData && scoreData.username && scoreData.score !== undefined) {
+                                scores.push(scoreData);
+                            } else {
+                                console.warn("⚠️ Geçersiz skor verisi:", scoreData);
+                            }
+                        });
+                    }
+                    
+                    console.log("📈 Firebase'den alınan skor sayısı:", scores.length);
                     
                     // Sıralama: önce puan, sonra süre
                     scores.sort((a, b) => {
@@ -585,7 +612,8 @@
                     
                     resolve(scores);
                 }, (error) => {
-                    console.error("Firebase'den skorlar alınamadı:", error);
+                    console.error("❌ Firebase'den skorlar alınamadı:", error);
+                    console.log("🔄 Yerel skorlara geçiliyor...");
                     // Hata durumunda yerel skorları döndür
                     resolve(getLocalScores());
                 });
@@ -1249,8 +1277,8 @@
         {
     text: "TikTok'ta viral olan bir challenge videosunda yorum gördün: 'Bu challenge'ı yapmak için şifre123 kullan, süper havalı hesap aç!'\nNe yaparsın?",
     options: [
-        { text: "Hemen şifre123'ü kullanarak hesap açarım", correct: false },
         { text: "Bu güvensiz görünüyor, kendi güçlü şifremi oluştururum", correct: true },
+        { text: "Hemen şifre123'ü kullanarak hesap açarım", correct: false },
         { text: "Arkadaşlarıma da bu şifreyi söylerim", correct: false }
     ],
     explanation: "Herkesin kullandığı basit şifreler çok tehlikeli! Her zaman kendi benzersiz ve güçlü şifreni oluştur. Şifreleri asla paylaşma."
@@ -1259,8 +1287,8 @@
     text: "YouTube'da en sevdiğin youtuber'ın videosunda açıklama kısmında link var:\n 'ÜCRETSİZ ROBUx KAZANMAK İÇİN TIKLA!'\nNe yaparsın?",
     options: [
         { text: "Hemen tıklarım, ücretsiz Robux istiyorum!", correct: false },
-        { text: "Bu bir tuzak, youtuber'ın gerçek olup olmadığını kontrol ederim", correct: true },
-        { text: "Linki kopyalayıp arkadaşlarıma gönderirim", correct: false }
+        { text: "Linki kopyalayıp arkadaşlarıma gönderirim", correct: false },
+        { text: "Bu bir tuzak, youtuber'ın gerçek olup olmadığını kontrol ederim", correct: true }
     ],
     explanation: "Ücretsiz oyun parası vaat eden linkler genellikle dolandırıcılık!\n\n Gerçek YouTuber'lar böyle şeyler paylaşmaz. Her zaman şüpheli ol."
 },
@@ -1277,8 +1305,8 @@
     text: "Discord'da oyun oynarken biri özel mesaj atıyor: 'Hey! Minecraft server'ımıza katıl, admin olmak ister misin? Şifreni ver, seni yetkili yapayım.'\nNe yaparsın?",
     options: [
         { text: "Süper! Hemen şifremi veririm, admin olmak istiyorum", correct: false },
-        { text: "Şifremi asla kimseyle paylaşmam, bu bir tuzak", correct: true },
-        { text: "Önce arkadaşlarıma sorayım, onlar da admin olmak isteyebilir", correct: false }
+        { text: "Önce arkadaşlarıma sorayım, onlar da admin olmak isteyebilir", correct: false },
+        { text: "Şifremi asla kimseyle paylaşmam, bu bir tuzak", correct: true }
     ],
     explanation: "Oyun şifrelerini ASLA kimseyle paylaşma! Gerçek admin'ler şifreni istemez. Bu hesap çalma yöntemidir."
 },
